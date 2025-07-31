@@ -1,0 +1,47 @@
+---
+import type { LinkPreview } from "@/types";
+
+interface Props {
+  link: LinkPreview;
+}
+const { link } = Astro.props;
+---
+
+<a
+  href={link.url}
+  target="_blank"
+  rel="noopener noreferrer"
+  class="not-prose no-underline group block mt-3 border border-base-content/10 rounded-xl hover:border-primary/30 hover:bg-base-200/50 transition-all duration-300"
+>
+  <div class="flex flex-col">
+    {
+      link.image && (
+        <figure>
+          <img
+            src={link.image}
+            alt={link.title}
+            class="w-full h-36 object-cover rounded-t-xl"
+          />
+        </figure>
+      )
+    }
+    <div class="p-4">
+      <div
+        class="font-bold text-sm text-base-content group-hover:text-primary transition-colors duration-300 line-clamp-2"
+      >
+        {link.title}
+      </div>
+      {
+        link.description && (
+          <p class="text-xs text-base-content/70 mt-1 line-clamp-2">
+            {link.description}
+          </p>
+        )
+      }
+      <div class="flex items-center gap-1 text-xs text-base-content/50 mt-2">
+        <i class="ri-links-line"></i>
+        <span>{link.hostname}</span>
+      </div>
+    </div>
+  </div>
+</a>

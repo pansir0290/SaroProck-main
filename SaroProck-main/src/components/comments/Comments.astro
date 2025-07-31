@@ -1,0 +1,20 @@
+---
+import CommentsWrapper from "./CommentsWrapper";
+
+interface Props {
+  identifier: string;
+  commentType: "blog" | "telegram";
+  displayMode?: "full" | "compact";
+}
+
+const { identifier, commentType, displayMode = "full" } = Astro.props;
+---
+
+<div class="comments-container">
+  <CommentsWrapper
+    client:visible
+    identifier={identifier}
+    commentType={commentType}
+    displayMode={displayMode}
+  />
+</div>

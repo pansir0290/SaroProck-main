@@ -1,0 +1,19 @@
+---
+import BaseLayout from "@/layouts/Layout.astro";
+import { getAdminUser } from "@/lib/auth";
+import CommentsManager from "@/components/admin/CommentsManager.tsx";
+
+// 在服务端进行权限验证
+const adminUser = getAdminUser(Astro);
+if (!adminUser) {
+  // 如果不是管理员，重定向到登录页，并在登录后返回此页面
+  return Astro.redirect(`/login?redirect=${Astro.url.pathname}`);
+}
+---
+
+<BaseLayout title="评论管理">
+  <a href="/admin" class="btn btn-ghost mb-4 rounded-lg">
+    <i class="ri-arrow-left-line"></i> 返回管理主页
+  </a>
+  <CommentsManager client:load />
+</BaseLayout>

@@ -1,0 +1,127 @@
+---
+// src/components/widgets/BackToTop.astro
+---
+
+<button
+  id="back-to-top-btn"
+  class="fixed bottom-6 right-6 md:bottom-8 md:right-8 w-12 h-12 bg-primary text-primary-content rounded-full shadow-lg opacity-0 pointer-events-none transform translate-y-4 transition-all duration-300 hover:scale-110 hover:shadow-xl z-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 no-print"
+  aria-label="回到顶部"
+>
+  <div class="relative w-full h-full flex items-center justify-center">
+    <i class="ri-arrow-up-line text-base md:text-lg z-10"></i>
+    <div class="absolute inset-0">
+      <svg class="w-full h-full transform -rotate-90" width="48" height="48">
+        <circle
+          class="text-primary-content/30"
+          stroke="currentColor"
+          stroke-width="2"
+          fill="transparent"
+          r="22"
+          cx="24"
+          cy="24"
+          id="progress-circle"
+          style="stroke-linecap: round;"></circle>
+      </svg>
+    </div>
+  </div>
+</button>
+
+<script>
+  class BackToTop {
+    private button: HTMLButtonElement | null;
+    private progressCircle: SVGCircleElement | null;
+    private circumference: number;
+    private isVisible: boolean = false;
+
+    constructor() {
+      this.button = document.getElementById(
+        "back-to-top-btn",
+      ) as HTMLButtonElement;
+      this.progressCircle = document.getElementById(
+        "progress-circle",
+      ) as unknown as SVGCircleElement;
+      this.circumference = 2 * Math.PI * 22;
+
+      this.init();
+    }
+
+    private init(): void {
+      if (this.progressCircle) {
+        this.progressCircle.style.strokeDasharray = `${this.circumference} ${this.circumference}`;
+        this.progressCircle.style.strokeDashoffset = `${this.circumference}`;
+      }
+
+      this.bindEvents();
+      this.updateVisibility();
+    }
+
+    private bindEvents(): void {
+      window.addEventListener("scroll", () => {
+        this.updateVisibility();
+        this.updateProgress();
+      });
+
+      if (this.button) {
+        this.button.addEventListener("click", () => this.scrollToTop());
+      }
+    }
+
+    private updateVisibility(): void {
+      const shouldShow = window.scrollY > 300;
+
+      if (shouldShow !== this.isVisible) {
+        this.isVisible = shouldShow;
+
+        if (this.button) {
+          if (shouldShow) {
+            this.button.classList.remove(
+              "opacity-0",
+              "pointer-events-none",
+              "translate-y-4",
+            );
+            this.button.classList.add(
+              "opacity-100",
+              "pointer-events-auto",
+              "translate-y-0",
+            );
+          } else {
+            this.button.classList.remove(
+              "opacity-100",
+              "pointer-events-auto",
+              "translate-y-0",
+            );
+            this.button.classList.add(
+              "opacity-0",
+              "pointer-events-none",
+              "translate-y-4",
+            );
+          }
+        }
+      }
+    }
+
+    private updateProgress(): void {
+      if (!this.progressCircle) return;
+
+      const scrollTop = window.scrollY;
+      const docHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = scrollTop / docHeight;
+
+      const offset = this.circumference - scrollPercent * this.circumference;
+      this.progressCircle.style.strokeDashoffset = `${offset}`;
+    }
+
+    private scrollToTop(): void {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+  }
+
+  // 初始化回到顶部按钮
+  document.addEventListener("DOMContentLoaded", () => {
+    new BackToTop();
+  });
+</script>

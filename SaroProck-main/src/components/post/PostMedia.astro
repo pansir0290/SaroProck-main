@@ -1,0 +1,113 @@
+---
+import type { MediaFile } from "@/types";
+
+interface Props {
+  media: MediaFile[];
+}
+const { media } = Astro.props;
+
+if (!media || media.length === 0) return null;
+---
+
+<div
+  id="post-media-carousel"
+  class="relative w-full h-full bg-base-300 flex items-center justify-center overflow-hidden"
+>
+  <div class="w-full h-full">
+    {
+      media.map((item, index) => (
+        <div
+          class="media-slide w-full h-full flex-shrink-0 items-center justify-center"
+          data-index={index}
+          style="display: none;"
+        >
+          {item.type === "image" ? (
+            <img
+              src={item.url}
+              alt={item.alt || "Image content"}
+              class="max-w-full max-h-full w-auto h-auto object-contain"
+            />
+          ) : (
+            <video
+              src={item.url}
+              controls
+              preload="metadata"
+              playsinline
+              class="max-w-full max-h-full"
+            />
+          )}
+        </div>
+      ))
+    }
+  </div>
+
+  {
+    media.length > 1 && (
+      <>
+        <div class="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-10">
+          <button class="btn btn-circle btn-ghost viewer-prev">
+            <i class="ri-arrow-left-s-line text-4xl text-white/80" />
+          </button>
+        </div>
+        <div class="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10">
+          <button class="btn btn-circle btn-ghost viewer-next">
+            <i class="ri-arrow-right-s-line text-4xl text-white/80" />
+          </button>
+        </div>
+      </>
+    )
+  }
+
+  {
+    media.length > 1 && (
+      <div class="absolute bottom-4 right-4 bg-black/50 text-white text-xs rounded-full px-2 py-1 z-10">
+        <span class="slide-counter-current">1</span> /{" "}
+        <span class="slide-counter-total">{media.length}</span>
+      </div>
+    )
+  }
+</div>
+
+<script define:vars={{ mediaCount: media.length }}>
+  const carousel = document.getElementById("post-media-carousel");
+  if (carousel) {
+    const slides = carousel.querySelectorAll(".media-slide");
+    const prevBtn = carousel.querySelector(".viewer-prev");
+    const nextBtn = carousel.querySelector(".viewer-next");
+    const currentCounter = carousel.querySelector(".slide-counter-current");
+    let currentIndex = 0;
+
+    const showSlide = (index) => {
+      currentIndex = (index + mediaCount) % mediaCount;
+      slides.forEach((slide, i) => {
+        slide.style.display = i === currentIndex ? "flex" : "none";
+        const video = slide.querySelector("video");
+        if (video) {
+          i === currentIndex ? video.play().catch((e) => {}) : video.pause();
+        }
+      });
+      if (currentCounter) currentCounter.textContent = currentIndex + 1;
+    };
+
+    prevBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showSlide(currentIndex - 1);
+    });
+    nextBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showSlide(currentIndex + 1);
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (
+        document.activeElement?.tagName === "INPUT" ||
+        document.activeElement?.tagName === "TEXTAREA"
+      )
+        return;
+      if (e.key === "ArrowLeft") showSlide(currentIndex - 1);
+      if (e.key === "ArrowRight") showSlide(currentIndex + 1);
+    });
+
+    if (slides.length > 0) slides[0].style.display = "flex";
+  }
+</script>

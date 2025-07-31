@@ -1,0 +1,83 @@
+---
+// src/pages/index.astro
+import Layout from "@layouts/Layout.astro";
+import TelegramLayout from "@layouts/TelegramLayout.astro";
+import FeedCard from "@components/feed/FeedCard.astro";
+import Pagination from "@components/feed/Pagination.astro";
+import { getChannelFeed } from "@/lib/telegram";
+
+const { searchParams } = Astro.url;
+const before = searchParams.get("before");
+const after = searchParams.get("after");
+const q = searchParams.get("q"); // 同时考虑搜索的情况
+
+const { posts } = await getChannelFeed(Astro, {
+  before: before || undefined,
+  after: after || undefined,
+  q: q || undefined,
+});
+
+const hasPosts = posts.length > 0;
+// "更早" 的光标是当前页面最后一条消息的 ID
+const beforeCursor = hasPosts ? posts[posts.length - 1].id : null;
+// "更新" 的光标是当前页面第一条消息的 ID
+const afterCursor = hasPosts ? posts[0].id : null;
+
+// 是否显示分页？(搜索时不显示)
+const showPagination = !q;
+// 是否显示 "更新" 按钮？(只有在非首页时才显示)
+const showAfter = showPagination && (!!before || !!after);
+// 是否显示 "更早" 按钮？(理论上总是显示，除非没有更多数据，这里我们先默认显示)
+const showBefore = showPagination;
+
+let infoMessage = "";
+if (q) {
+  infoMessage = `正在查看关于 <strong class="text-primary">“${q}”</strong> 的搜索结果。`;
+} else if (before) {
+  infoMessage = `正在查看 ID <strong class="text-primary">${before}</strong> 之前的动态。`;
+} else if (after) {
+  infoMessage = `正在查看 ID <strong class="text-primary">${after}</strong> 之后的动态。`;
+}
+---
+
+<Layout title="首页">
+  <TelegramLayout>
+    {
+      infoMessage && (
+        <div role="alert" class="alert rounded-xl text-sm">
+          <i class="ri-information-line" />
+          <span set:html={infoMessage} />
+          <a href="/" class="btn btn-ghost btn-sm ml-auto">
+            <i class="ri-arrow-go-back-line mr-1" />
+            返回最新
+          </a>
+        </div>
+      )
+    }
+
+    {
+      posts.length > 0 ? (
+        posts.map((post, index) => (
+          <FeedCard post={post} isLastItem={index === posts.length - 1} />
+        ))
+      ) : (
+        <div class="text-center text-base-content/60">
+          <i class="ri-compass-3-line text-4xl" />
+          <p class="mt-4">没有找到任何动态。</p>
+          {q && <p>请尝试更换搜索关键词。</p>}
+        </div>
+      )
+    }
+
+    {
+      showPagination && posts.length > 0 && (
+        <Pagination
+          beforeCursor={beforeCursor}
+          afterCursor={afterCursor}
+          showBefore={showBefore}
+          showAfter={showAfter}
+        />
+      )
+    }
+  </TelegramLayout>
+</Layout>
