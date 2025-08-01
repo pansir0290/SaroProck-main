@@ -37,12 +37,12 @@ export async function GET(context: any) {
       guid: post.longUrl,
       content,
       pubDate: new Date(pubDate),
-      customData: `<dc:creator><![CDATA[サン猫の時間漂流]]></dc:creator>`,
+      customData: `<dc:creator><![CDATA[サンpansir的随笔]]></dc:creator>`,
     };
   }));
 
   return rss({
-    title: "サン猫の時間漂流",
+    title: "サンpansir的随笔",
     description: "一个孤独的地方，散落着一个人的人生碎片",
     site: context.site.toString(),
     items,
@@ -52,7 +52,7 @@ export async function GET(context: any) {
       <atom:link href="${new URL(context.url.pathname, context.site)}" rel="self" type="application/rss+xml" />
       <image>
         <url>${new URL("/favicon.png", context.site).toString()}</url>
-        <title>サン猫の時間漂流</title>
+        <title>サンpansir的随笔</title>
         <link>${context.site}</link>
       </image>
     `,
