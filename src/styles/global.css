@@ -1,0 +1,103 @@
+@import "tailwindcss";
+@plugin "daisyui";
+@plugin "@tailwindcss/typography";
+
+.scrollbar-none {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .saro-code,
+  .saro-code span {
+    color: var(--shiki-dark) !important;
+  }
+}
+
+@font-face {
+  font-family: "Maple";
+  src: url("/MapleMono-Regular.ttf.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+  font-style: normal;
+}
+
+code {
+  font-family: "Maple", monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.saro-code {
+  @apply relative my-6 rounded-xl border border-base-content/20 bg-transparent overflow-hidden;
+}
+
+.saro-code-toolbar {
+  @apply sticky top-0 z-10 flex justify-between items-center px-4 py-2 bg-base-200 border-b border-base-content/20;
+}
+
+.saro-code-toolbar-language {
+  @apply text-sm font-semibold text-base-content/80;
+}
+
+.saro-code-content {
+  @apply overflow-x-auto bg-transparent rounded-none;
+}
+
+.saro-code-content > code > code {
+  @apply rounded-none p-2;
+  counter-reset: line;
+}
+
+.saro-code-content .line {
+  counter-increment: line;
+}
+
+.saro-code-content .line::before {
+  content: counter(line);
+  color: currentColor;
+  margin-right: 1rem; /* 16px */
+  display: inline-block;
+  width: 1rem; /* 16px */
+  text-align: right;
+}
+
+.btn-copy {
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.copy-success {
+  animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes like-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-like-pulse {
+  animation: like-pulse 0.4s ease-in-out;
+}

@@ -1,0 +1,160 @@
+---
+// src/components/feed/MediaGallery.astro
+import type { MediaFile } from "@/types";
+
+interface Props {
+  media: MediaFile[];
+  postId: string; // 用来创建唯一的模态框 ID
+}
+const { media, postId } = Astro.props;
+
+if (!media || media.length === 0) return null;
+
+// 取第一张图作为预览封面
+const coverImage = media[0].thumbnail || media[0].url;
+---
+
+<div class="media-preview-card not-prose mt-3">
+  <button
+    class="relative w-full h-36 rounded-xl overflow-hidden border border-base-content/10"
+    onclick={`document.getElementById('viewer-${postId}').showModal()`}
+    aria-label={`查看全部 ${media.length} 个媒体文件`}
+  >
+    <img
+      src={coverImage}
+      alt="媒体预览"
+      class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+    />
+    <div
+      class="absolute inset-0 bg-black/30 hover:bg-black/40 cursor-zoom-in transition-colors duration-300 flex flex-col items-center justify-center text-white"
+    >
+      <i class="ri-image-2-line text-4xl"></i>
+      <span class="text-sm font-medium mt-1">共 {media.length} 个媒体文件</span>
+    </div>
+  </button>
+</div>
+
+<dialog id={`viewer-${postId}`} class="modal p-0 bg-black/80 backdrop-blur-sm">
+  <div
+    class="modal-box w-full max-w-full h-screen max-h-screen rounded-none bg-transparent shadow-none p-4 md:p-8 flex flex-col"
+  >
+    <div
+      class="flex-shrink-0 text-white flex justify-between items-center mb-4 z-20"
+    >
+      <div class="text-sm">
+        <span class="slide-counter-current">1</span> / <span
+          class="slide-counter-total">{media.length}</span
+        >
+      </div>
+      <form method="dialog">
+        <button class="btn btn-ghost btn-circle">
+          <i class="ri-close-line text-2xl"></i>
+        </button>
+      </form>
+    </div>
+
+    <div class="relative flex-grow flex items-center justify-center min-h-0">
+      <div class="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20">
+        <button class="btn btn-ghost btn-circle viewer-prev">
+          <i class="ri-arrow-left-s-line text-4xl text-white"></i>
+        </button>
+      </div>
+
+      <div
+        class="w-full h-full flex items-center justify-center overflow-hidden"
+      >
+        {
+          media.map((item, index) => (
+            <div
+              class="media-slide w-full h-full flex-shrink-0 items-center justify-center"
+              data-index={index}
+              style="display: none;"
+            >
+              {item.type === "image" ? (
+                <img
+                  src={item.url}
+                  alt={item.alt || "Image content"}
+                  class="max-w-full max-h-full object-contain"
+                />
+              ) : (
+                <video
+                  src={item.url}
+                  controls
+                  preload="metadata"
+                  playsinline
+                  class="max-w-full max-h-full"
+                />
+              )}
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20">
+        <button class="btn btn-ghost btn-circle viewer-next">
+          <i class="ri-arrow-right-s-line text-4xl text-white"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<script define:vars={{ postId, mediaCount: media.length }}>
+  const dialog = document.getElementById(`viewer-${postId}`);
+  if (dialog) {
+    const slides = dialog.querySelectorAll(".media-slide");
+    const prevBtn = dialog.querySelector(".viewer-prev");
+    const nextBtn = dialog.querySelector(".viewer-next");
+    const currentCounter = dialog.querySelector(".slide-counter-current");
+    let currentIndex = 0;
+
+    const showSlide = (index) => {
+      currentIndex = (index + mediaCount) % mediaCount;
+
+      slides.forEach((slide, i) => {
+        if (i === currentIndex) {
+          slide.style.display = "flex";
+          const video = slide.querySelector("video");
+          if (video)
+            video.play().catch((e) => console.log("Autoplay prevented"));
+        } else {
+          slide.style.display = "none";
+          // 暂停其他视频
+          const video = slide.querySelector("video");
+          if (video) video.pause();
+        }
+      });
+      if (currentCounter) currentCounter.textContent = currentIndex + 1;
+    };
+
+    dialog.addEventListener("show", () => {
+      showSlide(0);
+    });
+
+    dialog.addEventListener("close", () => {
+      dialog.querySelectorAll("video").forEach((video) => video.pause());
+    });
+
+    prevBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showSlide(currentIndex - 1);
+    });
+
+    nextBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showSlide(currentIndex + 1);
+    });
+
+    dialog.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") {
+        prevBtn?.click();
+      } else if (e.key === "ArrowRight") {
+        nextBtn?.click();
+      }
+    });
+
+    if (slides.length > 0) {
+      slides[0].style.display = "flex";
+    }
+  }
+</script>

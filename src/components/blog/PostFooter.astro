@@ -1,0 +1,78 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  post: CollectionEntry<"blog">;
+  author: string;
+}
+const { post, author } = Astro.props;
+const { tags, categories } = post.data;
+---
+
+<footer class="mt-12 pt-8 border-t border-base-content/10">
+  {
+    ((tags && tags.length > 0) || (categories && categories.length > 0)) && (
+      <div class="mb-8 space-y-4">
+        {/* 分类区域 */}
+        {categories && categories.length > 0 && (
+          <div class="flex items-baseline gap-4">
+            <div class="flex items-center gap-2 text-base-content/80 shrink-0">
+              <i class="ri-folder-2-line" />
+              <h3 class="font-medium text-sm">分类</h3>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              {categories.map((category) => (
+                <div class="badge badge-lg badge-primary text-primary-content">
+                  {category}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 标签区域 */}
+        {tags && tags.length > 0 && (
+          <div class="flex items-baseline gap-4">
+            <div class="flex items-center gap-2 text-base-content/80 shrink-0">
+              <i class="ri-price-tag-3-line" />
+              <h3 class="font-medium text-sm">标签</h3>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              {tags.map((tag) => (
+                <div class="badge badge-lg badge-ghost">{tag}</div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  <div
+    class="relative bg-base-200/40 backdrop-blur-sm rounded-2xl p-6 text-sm text-base-content/80 leading-relaxed overflow-hidden border border-base-content/5"
+  >
+    <i
+      class="ri-creative-commons-fill absolute -right-8 -bottom-24 text-[180px] text-base-content/5 pointer-events-none"
+    ></i>
+
+    <div class="relative z-10">
+      <p>
+        <strong>版权声明：</strong>本文作者为 <strong>{author}</strong
+        >，首发于<a href={Astro.url.href} class="link link-primary mx-1"
+          >{Astro.site?.hostname}</a
+        >。
+      </p>
+      <p class="mt-2 flex items-start gap-2">
+        <i class="ri-creative-commons-line"></i>
+        <span
+          >遵循 <a
+            href="http://creativecommons.org/licenses/by-nc-sa/4.0/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="link link-primary">CC BY-NC-SA 4.0</a
+          > 许可协议。转载请注明出处！</span
+        >
+      </p>
+    </div>
+  </div>
+</footer>

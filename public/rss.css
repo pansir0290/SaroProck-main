@@ -1,0 +1,265 @@
+/*
+ * RSS Feed Stylesheet (Enhanced Version)
+ * Emulates a DaisyUI/TailwindCSS theme with modern, dynamic animations.
+ * Author: Gemini
+ * Date: 2025-06-10
+ */
+
+/* 1. 定义动画 Keyframes */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 2. 定义 DaisyUI 核心颜色变量 (使用默认 light 主题) */
+:root {
+  color-scheme: light; /* 默认浅色模式 */
+  --p: 259 94% 51%; /* primary */
+  --s: 328 94% 51%; /* secondary */
+  --a: 180 94% 39%; /* accent */
+  --n: 219 28% 19%; /* neutral */
+  --b1: 0 0% 100%; /* base-100 */
+  --b2: 0 0% 97%; /* base-200 */
+  --b3: 0 0% 94%; /* base-300 */
+  --bc: 215 28% 17%; /* base-content */
+  --pc: 0 0% 100%; /* primary-content */
+}
+
+/* 3. 定义深色模式下的颜色变量 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --p: 259 94% 51%;
+    --s: 328 94% 51%;
+    --a: 180 94% 39%;
+    --n: 219 28% 19%;
+    --b1: 216 28% 13%; /* base-100 */
+    --b2: 216 28% 11%; /* base-200 */
+    --b3: 218 28% 9%; /* base-300 */
+    --bc: 215 28% 97%; /* base-content */
+    --pc: 215 28% 13%; /* primary-content */
+  }
+}
+
+/* 4. 全局样式 */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Arial", sans-serif;
+  line-height: 1.6;
+  background-color: oklch(var(--b1));
+  color: oklch(var(--bc));
+  background-image: url("/topography.svg");
+  margin: 0;
+  padding: 1.5rem; /* 24px */
+}
+
+/* 5. 主要容器 (模仿 .blog-container) */
+.rss-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: oklch(var(--b2) / 0.3);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid gray;
+  border-radius: 1rem; /* 16px */
+  overflow: hidden;
+  box-shadow: 0 8px 32px 0 oklch(var(--n) / 0.1);
+  /* ✨ 新增: 容器入场动画 */
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* 6. 头部区域 */
+.rss-header {
+  padding: 2rem 2.5rem; /* 32px 40px */
+  background-color: oklch(var(--b2));
+  border-bottom: 1px solid oklch(var(--b3));
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.header-text {
+  flex-grow: 1;
+}
+
+/* 标题 (模仿 .frosti-heading) */
+.rss-header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2.25em; /* 稍微加大字号 */
+  font-weight: 800; /* 加粗 */
+}
+
+.rss-header h1 a {
+  background-image: linear-gradient(90deg, oklch(var(--p)), oklch(var(--s)));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-decoration: none;
+  transition: background-position 0.5s ease; /* ✨ 修改: 悬浮时过渡背景位置 */
+}
+
+.rss-header h1 a:hover {
+  background-position: -100% center; /* ✨ 修改: 产生流光效果 */
+}
+
+.rss-header p {
+  margin: 0;
+  color: oklch(var(--bc) / 0.7);
+}
+
+/* 7. "在 Folo 订阅" 按钮 (模仿 DaisyUI 的 btn) */
+.subscribe-button.folo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem; /* 稍微增加间距 */
+  background-color: #ff5c00; /* 使用 Folo 的主色 */
+  color: white;
+  padding: 0.75rem 1.25rem; /* 12px 20px */
+  border-radius: 0.5rem; /* 8px */
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* ✨ 修改: 使用更平滑的 cubic-bezier */
+  box-shadow:
+    0 1px 3px 0 rgb(0 0 0 / 0.1),
+    0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+.subscribe-button.folo:hover {
+  background-color: #e65300; /* ✨ 修改: 使用更深的颜色代替透明度 */
+  transform: translateY(-3px); /* ✨ 修改: 悬浮时上移更多 */
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1); /* ✨ 修改: 阴影更明显 */
+}
+
+.subscribe-button.folo .icon {
+  width: 1.2em;
+  height: 1.2em;
+  transition: transform 0.3s ease;
+}
+
+.subscribe-button.folo:hover .icon {
+  transform: scale(1.1) rotate(-5deg); /* ✨ 新增: 图标也增加一点动效 */
+}
+
+/* 8. 文章列表 */
+.rss-items {
+  padding: 1rem 2.5rem 1.5rem; /* 调整内边距 */
+}
+
+/* 单篇文章 (模仿 .archive-card) */
+.rss-item {
+  padding: 1.5rem 0;
+  /* ✨ 新增: 文章间的分割线 */
+  border-top: 1px solid oklch(var(--b3) / 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* ✨ 新增: 应用入场动画并设置交错延迟 */
+  opacity: 0; /* 初始状态透明 */
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* ✨ 新增: 使用 CSS Counter 来动态计算延迟 */
+.rss-item:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.rss-item:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.rss-item:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.rss-item:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.rss-item:nth-child(5) {
+  animation-delay: 0.5s;
+}
+/* ... 可以根据需要添加更多 */
+
+.rss-item:first-child {
+  border-top: none; /* ✨ 新增: 第一个条目不需要上边框 */
+  padding-top: 0.5rem;
+}
+
+.rss-item:last-child {
+  padding-bottom: 0.5rem;
+}
+
+/* ✨ 修改: 悬浮时整个卡片背景变化，更具整体感 */
+.rss-item:hover {
+  background-color: oklch(var(--b2) / 0.5);
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px oklch(var(--n) / 0.05);
+}
+
+/* 标题 */
+.rss-item h2 {
+  color: oklch(var(--bc));
+  position: relative;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem; /* 20px */
+  font-weight: 600;
+  padding-left: 1.75rem; /* 为箭头留出空间 */
+  transition: all 0.3s ease;
+}
+
+/* ✨ 修改: 使用 ::before 伪元素创建更现代的箭头 */
+.rss-item h2::before {
+  content: "#"; /* ✨ 修改: 使用箭头符号 */
+  color: oklch(var(--a)); /* 使用 accent 颜色 */
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 900;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rss-item h2 a {
+  color: inherit; /* ✨ 修改: 继承 h2 的颜色 */
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.rss-item:hover h2 a {
+  color: oklch(var(--p));
+}
+
+.rss-item .meta {
+  font-size: 0.875rem; /* 14px */
+  color: oklch(var(--bc) / 0.6);
+  margin-bottom: 0.75rem;
+  padding-left: 1.75rem; /* 与标题对齐 */
+}
+
+.rss-item .description {
+  color: oklch(var(--bc) / 0.8);
+  font-size: 1rem;
+  padding-left: 1.75rem; /* 与标题对齐 */
+}
+
+.rss-item .description p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* 9. 尾部 */
+.rss-footer {
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 0.875rem;
+  color: oklch(var(--bc) / 0.5);
+  background-color: oklch(var(--b2));
+  border-top: 1px solid oklch(var(--b3));
+}

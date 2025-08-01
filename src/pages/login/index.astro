@@ -1,0 +1,10 @@
+---
+import Layout from "@layouts/Layout.astro";
+import LoginForm from "@components/comments/LoginForm.tsx";
+---
+
+<Layout title="登录">
+  <div class="py-12 md:py-20">
+    <LoginForm client:load />
+  </div>
+</Layout>

@@ -1,0 +1,38 @@
+---
+// src/components/markdown/Figure.astro
+import type { ImageMetadata } from "astro";
+
+interface Props {
+  src: string | ImageMetadata;
+  alt: string;
+}
+const { src, alt } = Astro.props;
+---
+
+<figure class="relative my-8 saro-image-container group">
+  <div class="relative z-10 w-full max-w-lg mx-auto block">
+    <img
+      src={typeof src === "string" ? src : src.src}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      class="w-full rounded-lg shadow-xl"
+    />
+
+    <div class="absolute bottom-3 left-3">
+      <div
+        class="badge badge-ghost backdrop-blur-sm text-xs border-white/20 font-medium"
+      >
+        @EveSunMaple
+      </div>
+    </div>
+  </div>
+
+  {
+    alt && (
+      <figcaption class="text-center text-sm text-base-content/70 mt-4 max-w-lg mx-auto">
+        {alt}
+      </figcaption>
+    )
+  }
+</figure>

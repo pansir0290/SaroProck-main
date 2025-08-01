@@ -1,0 +1,50 @@
+/* src/styles/print.css */
+
+/* 使用 @media print 来定义只在打印时生效的样式 */
+@media print {
+  /* 隐藏所有不需要打印的组件 */
+  /* 我们为这些组件的父元素添加一个 .no-print 类 */
+  .no-print {
+    display: none !important;
+  }
+
+  /*
+   * 重置页面和文章的样式，使其在打印时占满纸张宽度
+   */
+  body {
+    min-width: unset !important;
+    background: none !important; /* 打印时不需要背景 */
+  }
+
+  /* 让文章容器占满整个页面 */
+  .printable-article-container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* 确保文章内容本身有一些页边距 */
+  .printable-article {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* 优化排版，使其更适合纸张 */
+  .prose {
+    font-size: 12pt; /* 使用磅作为单位更适合打印 */
+  }
+
+  /* 避免链接在打印时显示其URL */
+  .prose a::after {
+    content: "" !important;
+  }
+
+  /* 确保图片不会过大 */
+  .prose img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}

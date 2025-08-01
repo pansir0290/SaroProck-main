@@ -1,0 +1,132 @@
+---
+interface Props {
+  title: string;
+  url: string;
+  description?: string;
+}
+
+const { title, url, description = "" } = Astro.props;
+
+const encodedTitle = encodeURIComponent(title);
+const encodedUrl = encodeURIComponent(url);
+const encodedDescription = encodeURIComponent(description);
+
+// 将分享链接定义为一个数组，方便循环和管理
+const shareLinks = [
+  {
+    name: "Twitter",
+    icon: "ri-twitter-x-line",
+    url: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`,
+    class: "bg-[#1DA1F2] hover:bg-[#1a91da] focus:ring-[#1DA1F2]",
+  },
+  {
+    name: "Telegram",
+    icon: "ri-telegram-line",
+    url: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`,
+    class: "bg-[#0088cc] hover:bg-[#0077b3] focus:ring-[#0088cc]",
+  },
+  {
+    name: "微博",
+    icon: "ri-weibo-line",
+    url: `https://service.weibo.com/share/share.php?url=${encodedUrl}&title=${encodedTitle}`,
+    class: "bg-[#E6162D] hover:bg-[#d01426] focus:ring-[#E6162D]",
+  },
+  {
+    name: "QQ",
+    icon: "ri-qq-line",
+    url: `https://connect.qq.com/widget/shareqq/index.html?url=${encodedUrl}&title=${encodedTitle}&desc=${encodedDescription}`,
+    class: "bg-[#12B7F5] hover:bg-[#0ea5e9] focus:ring-[#12B7F5]",
+  },
+  {
+    name: "Facebook",
+    icon: "ri-facebook-line",
+    url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+    class: "bg-[#4267B2] hover:bg-[#365899] focus:ring-[#4267B2]",
+  },
+  {
+    name: "LinkedIn",
+    icon: "ri-linkedin-line",
+    url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+    class: "bg-[#0077B5] hover:bg-[#006396] focus:ring-[#0077B5]",
+  },
+];
+
+const baseButtonClasses =
+  "btn btn-sm rounded-full text-white no-underline flex-shrink-0";
+---
+
+<div class="bg-base-200/40 rounded-2xl p-6 border border-base-content/5">
+  <div class="mb-4 text-center">
+    <h3 class="text-lg font-bold text-base-content mb-1">分享这篇文章</h3>
+    <p class="text-sm text-base-content/60">知识因分享而增值</p>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+    {
+      shareLinks.map((link) => (
+        <a
+          href={link.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class:list={[baseButtonClasses, link.class]}
+          aria-label={`分享到 ${link.name}`}
+        >
+          <i class={link.icon} />
+          <span>{link.name}</span>
+        </a>
+      ))
+    }
+
+    <button
+      class:list={[baseButtonClasses, "btn-neutral copy-link"]}
+      data-url={url}
+      aria-label="复制链接"
+    >
+      <i class="ri-link"></i>
+      <span>复制链接</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const copyButton = document.querySelector(".copy-link");
+
+    if (copyButton) {
+      const originalIconClass = "ri-link";
+      const spanElement = copyButton.querySelector("span");
+      const originalText = spanElement ? spanElement.innerHTML : "";
+      const copiedButtonClasses = ["bg-success", "text-success-content"];
+
+      copyButton.addEventListener("click", async () => {
+        const url = copyButton.getAttribute("data-url");
+        if (!url || copyButton.classList.contains("copied-state")) return;
+
+        try {
+          await navigator.clipboard.writeText(url);
+
+          const icon = copyButton.querySelector("i");
+          const text = copyButton.querySelector("span");
+          copyButton.classList.add("copied-state");
+
+          if (icon && text) {
+            icon.className = "ri-check-line";
+            text.innerHTML = "复制成功";
+            copyButton.classList.add(...copiedButtonClasses);
+          }
+
+          setTimeout(() => {
+            if (icon && text) {
+              icon.className = originalIconClass;
+              text.innerHTML = originalText;
+              copyButton.classList.remove(...copiedButtonClasses);
+              copyButton.classList.remove("copied-state");
+            }
+          }, 3000);
+        } catch (err) {
+          console.error("复制失败:", err);
+        }
+      });
+    }
+  });
+</script>
