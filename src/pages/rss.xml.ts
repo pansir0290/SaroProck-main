@@ -1,4 +1,4 @@
-import rss from "@pansir029/rss";
+import rss from "@astrojs/rss";
 import { marked } from "marked";
 import { getAllPostsWithShortLinks } from "@/lib/blog";
 
