@@ -1,0 +1,375 @@
+---
+// src/pages/friends.astro
+import Layout from "@layouts/Layout.astro";
+import { Icon } from "astro-icon/components";
+
+// 友链数据 (保持不变)
+const mainLinks = [
+  {
+    id: "weichky",
+    name: "Weichky's Blog",
+    avatar: "https://assets.weichky.com/imgs/favicon.png",
+    desc: "物不可穷也，故受之以未济。",
+    url: "https://blog.weichky.com",
+    story:
+      "一封邮件，打开了消失已久的「友人帐」的扉页。我很久以前曾默默删掉了友链页面，现在看到，一想，如果，真的是友情链接，而不是……或许也没那么糟糕。99+ 文章的博客，值得放在这里。",
+  },
+  {
+    id: "meowlynxsea",
+    name: "梦凌汐",
+    avatar: "https://avatars.githubusercontent.com/u/169180836?v=4",
+    desc: "一只来自宇宙边缘、在地球旅行的程序猫",
+    url: "https://meowdream.cn/",
+    story:
+      "想了很久，不知道怎么写……对我来说，好像母亲，或者是朋友。也许，这就是稳定、安心的确定性吧。",
+  },
+];
+
+const secondaryLinks = [
+  { id: "tnxg", name: "天翔TNXGの自留地", url: "https://www.tnxg.top" },
+  { id: "yirween", name: "Yirween", url: "https://yirween.netlify.app/" },
+  { id: "fanzhuo", name: "Fanzhuo", url: "https://blog.fanzhuo.xyz/" },
+];
+
+const EMAIL = "evesunmaple@outlook.com";
+---
+
+<Layout title="友人帐" description="我与朋友们的相遇与故事。">
+  <div class="animate-fade-in">
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold flex items-center gap-3">
+        <i class="ri-heart-pulse-line text-primary"></i>
+        <span>友人帐</span>
+      </h1>
+      <p class="text-base-content/70 mt-2 text-lg">
+        在网络世界中与我同行的人们。
+      </p>
+    </header>
+    <div
+      class="bg-base-200/40 backdrop-blur-sm rounded-2xl p-6 md:p-8 shadow-sm border border-base-content/5"
+    >
+      <div class="grid gap-10 md:grid-cols-3">
+        <main class="md:col-span-2 flex flex-col gap-10">
+          <section class="space-y-6">
+            <h2 class="text-2xl font-bold flex items-center gap-2">
+              <Icon name="ri:link-m" class="w-7 h-7" />
+              <span>友情链接</span>
+            </h2>
+
+            <div class="grid gap-6 sm:grid-cols-1 md:grid-cols-2">
+              {
+                mainLinks.map((link) => (
+                  <div class="relative pt-12 h-full flex flex-col">
+                    <button
+                      class="card-button text-left w-full h-full"
+                      onclick={`${link.id}.showModal()`}
+                      aria-label={`查看关于 ${link.name} 的故事`}
+                    >
+                      <article class="card bg-base-100/60 border border-base-content/5 rounded-xl p-6 relative w-full h-full flex flex-col items-start transition-all duration-300 transform hover:shadow-lg hover:-translate-y-1 hover:cursor-pointer">
+                        <div class="absolute -top-8 left-6">
+                          <div class="relative w-20 h-20">
+                            <img
+                              src={link.avatar}
+                              alt={`${link.name} 的头像`}
+                              class="w-full h-full rounded-full object-cover ring-4 ring-primary ring-offset-2 ring-offset-base-100"
+                              loading="lazy"
+                            />
+                            <div class="status-indicator-wrapper absolute bottom-0 right-0">
+                              <div
+                                class="status-indicator is-checking"
+                                data-url={link.url}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="ml-0 mt-12 pl-0">
+                          <h3 class="text-xl font-bold mb-1">{link.name}</h3>
+                          <p class="text-sm text-base-content/70">
+                            {link.desc}
+                          </p>
+                        </div>
+                      </article>
+                    </button>
+                  </div>
+                ))
+              }
+            </div>
+          </section>
+
+          <section class="space-y-4">
+            <h2 class="text-2xl font-bold flex items-center gap-2">
+              <Icon name="ri:group-line" class="w-7 h-7" />
+              <span>朋友圈</span>
+            </h2>
+
+            <div class="flex flex-wrap gap-3">
+              {
+                secondaryLinks.map((link) => (
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn btn-soft btn-sm rounded-lg transition-all duration-200 hover:scale-105 flex items-center gap-2"
+                  >
+                    <div
+                      class="status-indicator is-checking"
+                      data-url={link.url}
+                    />
+                    <span>{link.name}</span>
+                  </a>
+                ))
+              }
+            </div>
+          </section>
+        </main>
+
+        <aside class="md:col-span-1 flex flex-col gap-6">
+          <div class="sticky top-8">
+            <h3 class="text-xl font-bold flex items-center gap-2 mb-3">
+              <Icon name="ri:mail-send-line" class="w-6 h-6" />
+              <span>申请友链</span>
+            </h3>
+
+            <div
+              class="p-6 bg-base-100/60 rounded-2xl space-y-4 border border-base-content/5"
+            >
+              <div
+                class="p-3 bg-primary/10 text-base-content rounded-xl border border-primary/20"
+              >
+                <h4 class="font-bold mb-2 flex items-center gap-2">
+                  <Icon
+                    name="ri:information-fill"
+                    class="w-4 h-4 text-primary"
+                  />
+                  <span>申请须知</span>
+                </h4>
+                <ul class="text-sm leading-relaxed space-y-2 list-inside">
+                  <li>
+                    <Icon
+                      name="ri:check-line"
+                      class="inline w-4 h-4 mr-1 text-success"
+                    />本站优先收录原创、内容积极、持续更新的个人博客。
+                  </li>
+                  <li>
+                    <Icon
+                      name="ri:check-line"
+                      class="inline w-4 h-4 mr-1 text-success"
+                    />请确保您的站点是 <span class="font-semibold">HTTPS</span> 且可以访问。
+                  </li>
+                  <li>
+                    <Icon
+                      name="ri:check-line"
+                      class="inline w-4 h-4 mr-1 text-success"
+                    />请 <span class="font-semibold">先在本站添加我的友链</span
+                    >，再提交申请。
+                  </li>
+                  <li>
+                    <Icon
+                      name="ri:link"
+                      class="inline w-4 h-4 mr-1 text-info"
+                    />
+                    <a
+                      href="https://saro.pub/me"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="link link-hover font-semibold">サン猫の時間漂流</a
+                    > (https://saro.pub/me)
+                  </li>
+                </ul>
+              </div>
+
+              <form
+                action={`mailto:${EMAIL}`}
+                method="POST"
+                enctype="text/plain"
+                class="space-y-3"
+              >
+                <div class="form-control">
+                  <label class="label" for="name"
+                    ><span class="label-text">网站名称</span></label
+                  >
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    placeholder="サン猫の時間漂流"
+                    class="input input-bordered w-full rounded-lg"
+                    required
+                  />
+                </div>
+                <div class="form-control">
+                  <label class="label" for="site_url"
+                    ><span class="label-text">网站地址</span></label
+                  >
+                  <input
+                    type="url"
+                    id="site_url"
+                    name="url"
+                    placeholder="https://example.com"
+                    class="input input-bordered w-full rounded-lg"
+                    required
+                  />
+                </div>
+
+                <button type="submit" class="btn btn-primary rounded-lg w-full">
+                  <Icon name="ri:send-plane-2-line" class="w-4 h-4" />
+                  <span>发送邮件申请</span>
+                </button>
+              </form>
+            </div>
+
+            <div class="mt-6 text-sm text-base-content/60">
+              <p>欢迎来信交流，也欢迎先在留言板留下一段话再申请互链。</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  {
+    mainLinks.map((link) => (
+      <dialog id={`${link.id}`} class="modal modal-bottom sm:modal-middle">
+        <div class="modal-box rounded-t-2xl sm:rounded-2xl">
+          <h3 class="font-bold text-2xl mb-4 flex items-center gap-3">
+            <img
+              src={link.avatar}
+              alt=""
+              class="w-10 h-10 rounded-full object-cover"
+            />
+            <span>{link.name}</span>
+          </h3>
+          <p class="py-4 text-base-content/80 leading-relaxed">{link.story}</p>
+          <div class="modal-action mt-4">
+            <form
+              method="dialog"
+              class="w-full flex justify-between items-center"
+            >
+              <a
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn btn-primary rounded-lg"
+              >
+                <Icon name="lucide:external-link" class="w-5 h-5" />
+                <span>前往做客</span>
+              </a>
+              <button class="btn btn-ghost rounded-lg">关闭</button>
+            </form>
+          </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+    ))
+  }
+
+  <script is:inline>
+    document.addEventListener("DOMContentLoaded", () => {
+      const indicators = document.querySelectorAll(".status-indicator");
+
+      const checkStatus = async (element, url) => {
+        try {
+          await fetch(url, {
+            method: "HEAD",
+            mode: "no-cors",
+            cache: "no-cache",
+          });
+          updateIndicator(element, true);
+        } catch (error) {
+          updateIndicator(element, false);
+        }
+      };
+
+      const updateIndicator = (element, isOnline) => {
+        element.classList.remove("is-checking", "is-online", "is-offline");
+        if (isOnline) {
+          element.classList.add("is-online");
+          element.title = "站点可访问";
+        } else {
+          element.classList.add("is-offline");
+          element.title = "站点暂时无法访问";
+        }
+      };
+
+      indicators.forEach((indicator) => {
+        const url = indicator.dataset.url;
+        if (url) {
+          const delay = Math.random() * 1200 + 200;
+          setTimeout(() => checkStatus(indicator, url), delay);
+        }
+      });
+    });
+  </script>
+
+  <style>
+    .status-indicator {
+      position: relative;
+      width: 0.6rem;
+      height: 0.6rem;
+      border-radius: 9999px;
+      flex-shrink: 0;
+      isolation: isolate;
+      overflow: visible;
+      z-index: 2;
+    }
+
+    .status-indicator-wrapper .status-indicator {
+      width: 0.9rem;
+      height: 0.9rem;
+      border: 0.15rem solid var(--color-base-100);
+      z-index: 2;
+    }
+
+    .status-indicator.is-checking {
+      background-color: #9ca3af;
+    }
+    .status-indicator.is-online {
+      background-color: #22c55e;
+    }
+    .status-indicator.is-offline {
+      background-color: #ef4444;
+    }
+
+    .status-indicator::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 100%;
+      height: 100%;
+      transform: translate(-50%, -50%) scale(0.8);
+      border-radius: 9999px;
+      pointer-events: none;
+      background: transparent;
+      border: 2px solid rgba(34, 197, 94, 0);
+      box-sizing: border-box;
+      z-index: 1;
+      opacity: 0;
+    }
+
+    .status-indicator.is-online::after {
+      border-color: rgba(34, 197, 94, 0.35);
+      animation: ripple 1.5s infinite ease-out;
+      opacity: 1;
+    }
+
+    @keyframes ripple {
+      0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(2.6);
+        opacity: 0;
+      }
+    }
+
+    .card article,
+    .card-button article {
+      overflow: visible;
+    }
+  </style>
+</Layout>
