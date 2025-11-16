@@ -47,7 +47,7 @@ function parseVideos(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
                 thumbnail,
       });
     }
-  });
+  };
   return videos;
 }
 
