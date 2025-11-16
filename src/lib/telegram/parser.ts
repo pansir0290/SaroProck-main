@@ -5,7 +5,7 @@ import dayjs from "./dayjs-setup";
 const STATIC_PROXY =
   (import.meta as any)?.env?.STATIC_PROXY ||
   (typeof process !== "undefined" ? (process as any)?.env?.STATIC_PROXY : undefined) ||
-  "https://cdn5.telesco.pe";
+  "https://white-resonance-4c68.pansir0295252.workers.dev/";
 function parseImages(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
   return item.find(".tgme_widget_message_photo_wrap").map((_, photo) => {
     const rawUrl = $(photo).attr("style")?.match(/url\(["'](.*?)["']/)?.[1];
