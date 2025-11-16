@@ -3,30 +3,23 @@ import type { Element } from "domhandler";
 import type { LinkPreview, MediaFile, Reply, TelegramPost } from "@/types";
 import dayjs from "./dayjs-setup";
 
-// 图片代理配置
 const STATIC_PROXY =
   (import.meta as any)?.env?.STATIC_PROXY ||
   (typeof process !== "undefined" ? (process as any)?.env?.STATIC_PROXY : undefined) ||
   "https://tgimage.34310889.xyz";
-
 function parseImages(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
   return item.find(".tgme_widget_message_photo_wrap").map((_, photo) => {
     const rawUrl = $(photo).attr("style")?.match(/url\(["'](.*?)["']/)?.[1];
     // 用正则提取 /file/ 及其后面的内容
     const filePath = rawUrl?.match(/\/file\/.+/i)?.[0];
-    // 修复 1：删除多余的 'it'
     const url = filePath ? `${STATIC_PROXY}${filePath}` : undefined;
-
     return url ? { type: "image", url } : null;
   }).get().filter(Boolean) as MediaFile[];
 }
 
-// 修复 2：删除第一次重复的 parseVideos 函数定义
-
 function parseVideos(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
   const videos: MediaFile[] = [];
   item.find(".tgme_widget_message_video_wrap video").each((_, video) => {
-    // 修复 3：简化和修正内部逻辑
     const src = $(video).attr("src");
     if (src) {
       const filePath = src.match(/\/file\/.+/i)?.[0];
@@ -34,7 +27,7 @@ function parseVideos(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
 
       const poster = $(video).attr("poster") || undefined;
       const thumbPath = poster?.match(/\/file\/.+/i)?.[0];
-      const thumbnail = poster ? (thumbPath ? `${STATIC_PROXY}${thumbPath}` : poster) : undefined
+      const thumbnail = poster ? (thumbPath ? `${STATIC_PROXY}${thumbPath}` : poster) : undefined;
 
       videos.push({
         type: "video",
@@ -42,12 +35,11 @@ function parseVideos(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
         thumbnail,
       });
     }
-  }); // 修复 3：删除多余的闭合花括号和分号
-
+  });
   return videos;
 }
 
-function parseLinkPreview(item: Cheerio<Element>, _: CheerioAPI): LinkPreview | undefined {
+function parseLinkPreview(item: Cheerio<Element>, $: CheerioAPI): LinkPreview | undefined {
   const link = item.find(".tgme_widget_message_link_preview");
   const url = link.attr("href");
   if (!url)
@@ -55,7 +47,7 @@ function parseLinkPreview(item: Cheerio<Element>, _: CheerioAPI): LinkPreview | 
 
   const title = link.find(".link_preview_title").text() || link.find(".link_preview_site_name").text();
   const description = link.find(".link_preview_description").text();
-  const imageSrc = link.find(".link_preview_image")?.attr("style")?.match(/url\(["'](.*?)["']\)/i)?.[1];
+  const imageSrc = link.find(".link_preview_image")?.attr("style")?.match(/url\(["'](.*?)["']/i)?.[1];
 
   try {
     const hostname = new URL(url).hostname;
@@ -71,43 +63,15 @@ function parseReply(item: Cheerio<Element>, $: CheerioAPI, channel: string): Rep
   if (reply.length === 0)
     return undefined;
 
-  reply.find("i.emoji").each((_, el) => {
-    $(el).removeAttr("style");
-  });
-
   const href = reply.attr("href");
   if (!href)
     return undefined;
 
-  // 解析目标频道与 ID
-  let targetChannel = channel;
-  let targetId = "";
-  let finalUrl = "";
-  let isExternal = false;
+  const id = href.split("/").pop() || "";
+  const author = reply.find(".tgme_widget_message_author_name").text() || "未知用户";
 
-  if (href.startsWith("https://t.me/")) {
-    const match = href.match(/^https:\/\/t\.me\/([^/]+)\/(\d+)/);
-    if (match) {
-      targetChannel = match[1];
-      targetId = match[2];
-      finalUrl = href; // 保留完整外部链接
-      isExternal = targetChannel !== channel;
-    }
-  }
-  else if (href.startsWith("/")) {
-    const parts = href.split("/");
-    targetId = parts.pop() || "";
-    finalUrl = `/post/${targetId}`;
-  }
+  let text = reply.text().replace(author, "").trim();
 
-  // 作者
-  const author = reply.find(".tgme_widget_message_author_name").text()?.trim() || targetChannel || "未知用户";
-
-  // 回复文本（HTML）
-  const textHtml = reply.find(".tgme_widget_message_text").html()?.trim() || "";
-
-  // 如果没有文本，检查是否是图片、视频等
-  let text = textHtml;
   if (!text) {
     if (reply.find(".tgme_widget_message_photo").length > 0)
       text = "[图片]";
@@ -115,22 +79,13 @@ function parseReply(item: Cheerio<Element>, $: CheerioAPI, channel: string): Rep
       text = "[贴纸]";
     else if (reply.find(".tgme_widget_message_video").length > 0)
       text = "[视频]";
-    else
-      text = "...";
+    else text = "...";
   }
 
-  // 缩略图
-  const thumbStyle = reply.find(".tgme_widget_message_reply_thumb").attr("style");
-  const thumb = thumbStyle?.match(/url\(['"]?(.*?)['"]?\)/)?.[1];
-
   return {
-    url: finalUrl,
+    url: `/post/${id}`,
     author,
-    html: text,
-    thumb,
-    isExternal,
-    targetChannel,
-    targetId,
+    text,
   };
 }
 
@@ -156,7 +111,7 @@ function parseUnsupportedMedia(item: Cheerio<Element>, $: CheerioAPI, postLink: 
         </a>
       </div>
     `;
-} // 修复 4：添加分号，清除下面的所有非空白字符直到 export
+}
 
 export function parsePost(element: Element, $: CheerioAPI, channel: string): TelegramPost {
   const item = $(element);
@@ -166,7 +121,8 @@ export function parsePost(element: Element, $: CheerioAPI, channel: string): Tel
   const datetime = item.find(".tgme_widget_message_date time")?.attr("datetime") || "";
   const formattedDate = datetime ? dayjs(datetime).tz("Asia/Shanghai").fromNow() : "未知时间";
 
-  const textElement = item.find(".tgme_widget_message_text").filter((_, el) => !el.attribs.class.includes("js-message_reply_text")).clone();
+  const textElement = item.find(".tgme_widget_message_text").clone();
+
   textElement.find("a").each((_, el) => {
     const link = $(el);
     if (link.text().startsWith("#")) {
@@ -178,10 +134,6 @@ export function parsePost(element: Element, $: CheerioAPI, channel: string): Tel
   });
 
   textElement.find(".tgme_widget_message_photo_wrap, .tgme_widget_message_video_wrap").remove();
-
-  textElement.find("i.emoji").each((_, el) => {
-    $(el).removeAttr("style");
-  });
 
   const unsupportedMediaHtml = parseUnsupportedMedia(item, $, postLink);
 
