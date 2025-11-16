@@ -2,36 +2,31 @@ import type { Cheerio, CheerioAPI } from "cheerio";
 import type { Element } from "domhandler";
 import type { LinkPreview, MediaFile, Reply, TelegramPost } from "@/types";
 import dayjs from "./dayjs-setup";
+
+// 图片代理配置
 const STATIC_PROXY =
   (import.meta as any)?.env?.STATIC_PROXY ||
   (typeof process !== "undefined" ? (process as any)?.env?.STATIC_PROXY : undefined) ||
   "https://tgimage.34310889.xyz";
+
 function parseImages(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
   return item.find(".tgme_widget_message_photo_wrap").map((_, photo) => {
     const rawUrl = $(photo).attr("style")?.match(/url\(["'](.*?)["']/)?.[1];
     // 用正则提取 /file/ 及其后面的内容
     const filePath = rawUrl?.match(/\/file\/.+/i)?.[0];
-    const url = filePath ? `${STATIC_PROXY}${filePath}` : undefined; it 
-    return url ? { type: "image", url } : null;
-  }).get().filter(Boolean) as MediaFile[];
-}
-
-function parseVideos(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
-  const videos: MediaFile[] = [];
-  item.find(".tgme_widget_message_video_wrap video").each((_, video) => {
-        const rawUrl = $(photo).attr("style")?.match(/url\(["'](.*?)["']/)?.[1];
-    // 用正则提取 /file/ 及其后面的内容
-    const filePath = rawUrl?.match(/\/file\/.+/i)?.[0];
+    // 修复 1：删除多余的 'it'
     const url = filePath ? `${STATIC_PROXY}${filePath}` : undefined;
+
     return url ? { type: "image", url } : null;
   }).get().filter(Boolean) as MediaFile[];
 }
 
+// 修复 2：删除第一次重复的 parseVideos 函数定义
+
 function parseVideos(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
   const videos: MediaFile[] = [];
   item.find(".tgme_widget_message_video_wrap video").each((_, video) => {
-    const url = $(video).attr("src");
-    if (url) {
+    // 修复 3：简化和修正内部逻辑
     const src = $(video).attr("src");
     if (src) {
       const filePath = src.match(/\/file\/.+/i)?.[0];
@@ -40,14 +35,15 @@ function parseVideos(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
       const poster = $(video).attr("poster") || undefined;
       const thumbPath = poster?.match(/\/file\/.+/i)?.[0];
       const thumbnail = poster ? (thumbPath ? `${STATIC_PROXY}${thumbPath}` : poster) : undefined
-    if (url) {
+
       videos.push({
         type: "video",
         url,
-                thumbnail,
+        thumbnail,
       });
     }
-  };
+  }); // 修复 3：删除多余的闭合花括号和分号
+
   return videos;
 }
 
@@ -160,9 +156,8 @@ function parseUnsupportedMedia(item: Cheerio<Element>, $: CheerioAPI, postLink: 
         </a>
       </div>
     `;
+} // 修复 4：添加分号，清除下面的所有非空白字符直到 export
 
-
-  
 export function parsePost(element: Element, $: CheerioAPI, channel: string): TelegramPost {
   const item = $(element);
   const id = item.attr("data-post")?.replace(`${channel}/`, "") || "0";
