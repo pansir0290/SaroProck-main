@@ -160,7 +160,6 @@ function parseUnsupportedMedia(item: Cheerio<Element>, $: CheerioAPI, postLink: 
         </a>
       </div>
     `;
-}
 
 export function parsePost(element: Element, $: CheerioAPI, channel: string): TelegramPost {
   const item = $(element);
