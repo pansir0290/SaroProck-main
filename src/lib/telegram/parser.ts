@@ -5,13 +5,13 @@ import dayjs from "./dayjs-setup";
 const STATIC_PROXY =
   (import.meta as any)?.env?.STATIC_PROXY ||
   (typeof process !== "undefined" ? (process as any)?.env?.STATIC_PROXY : undefined) ||
-  "https://white-resonance-4c68.pansir0295252.workers.dev/";
+  "https://tgimage.34310889.xyz";
 function parseImages(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
   return item.find(".tgme_widget_message_photo_wrap").map((_, photo) => {
     const rawUrl = $(photo).attr("style")?.match(/url\(["'](.*?)["']/)?.[1];
     // 用正则提取 /file/ 及其后面的内容
     const filePath = rawUrl?.match(/\/file\/.+/i)?.[0];
-    const url = filePath ? `${STATIC_PROXY}${filePath}` : undefined;
+    const url = filePath ? `${STATIC_PROXY}${filePath}` : undefined; it 
     return url ? { type: "image", url } : null;
   }).get().filter(Boolean) as MediaFile[];
 }
