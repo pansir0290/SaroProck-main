@@ -26,6 +26,43 @@ interface SearchResult {
   };
 }
 
+// 兼容抓取 Feed/动态 数据的辅助函数
+async function getFeedEntries() {
+  let feeds: any[] = [];
+  try {
+    // 优先尝试读取 spec 集合
+    feeds = await getCollection("spec" as any);
+  } catch {
+    try {
+      // 其次尝试读取 feed 集合
+      feeds = await getCollection("feed" as any);
+    } catch {
+      feeds = [];
+    }
+  }
+
+  return feeds.map((item) => {
+    // 过滤 Markdown 标题符号，截取纯文本作为默认标题
+    const cleanBody = (item.body || "").replace(/^[#\s]+/gm, "").trim();
+    const firstLine = cleanBody.split("\n")[0] || "动态";
+    const autoTitle = firstLine.length > 30 ? `${firstLine.slice(0, 30)}...` : firstLine;
+
+    const id = item.id || item.slug || "";
+    
+    return {
+      data: {
+        title: item.data?.title || autoTitle,
+        description: item.data?.description || "",
+        tags: item.data?.tags || ["动态"],
+        categories: item.data?.categories || ["Telegram"],
+      },
+      body: item.body || "",
+      shortLink: `/feed#${id}`,
+      longUrl: `/feed#${id}`,
+    };
+  });
+}
+
 export const POST: APIRoute = async ({ request, site }) => {
   try {
     const body = (await request.json()) as SearchQuery;
@@ -47,25 +84,10 @@ export const POST: APIRoute = async ({ request, site }) => {
     // 1. 获取常规博客文章
     const blogPosts = await getAllPostsWithShortLinks(site);
 
-    // 2. 获取 Telegram 动态数据（兼容 spec / feed 集合）
-    const rawFeeds = await getCollection("spec").catch(() =>
-      getCollection("feed" as any).catch(() => [])
-    );
+    // 2. 获取 Telegram 动态数据
+    const feedPosts = await getFeedEntries();
 
-    // 将 TG 动态统一包装成 search 识别的结构
-    const feedPosts = rawFeeds.map((item: any) => ({
-      data: {
-        title: item.data?.title || item.body.slice(0, 30).replace(/\n/g, " ") || "TG 动态",
-        description: item.data?.description || "",
-        tags: item.data?.tags || ["动态"],
-        categories: item.data?.categories || ["Telegram"],
-      },
-      body: item.body || "",
-      shortLink: `/feed#${item.id || item.slug}`,
-      longUrl: `/feed#${item.id || item.slug}`,
-    }));
-
-    // 合并全部数据源
+    // 3. 合并所有内容数据源
     const allPosts = [...blogPosts, ...feedPosts];
 
     const processor = remark().use(strip);
