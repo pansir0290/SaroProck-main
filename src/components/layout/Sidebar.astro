@@ -1,0 +1,198 @@
+---
+import type { MarkdownHeading } from "astro";
+import { getCollection } from "astro:content";
+import TOC from "@components/blog/TOC.astro";
+
+export interface Props {
+  author: string;
+  twitterHandle: string;
+  githubUrl: string;
+  telegramUrl: string;
+  headings?: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+
+// --- 动态统计数据逻辑 (保持原样，无改动) ---
+const allPosts = await getCollection("blog", ({ data }) => data.draft !== true);
+const countWords = (text: string) => {
+  text = text.replace(/[\u3000-\u303F\uFF00-\uFFEF]/g, "");
+  text = text.replace(/[`*~_#+\-!\[\]{}()>|]/g, "");
+  const cjkChars = text.match(/[\u4e00-\u9fa5]/g)?.length || 0;
+  const otherWords =
+    text.replace(/[\u4e00-\u9fa5]/g, " ").match(/\b\w+\b/g)?.length || 0;
+  return cjkChars + otherWords;
+};
+const totalWords = allPosts.reduce(
+  (acc, post) => acc + countWords(post.body),
+  0,
+);
+const formattedTotalWords =
+  totalWords > 1000 ? `${(totalWords / 1000).toFixed(1)}k` : totalWords;
+const stats = {
+  articles: allPosts.length,
+  words: formattedTotalWords,
+};
+
+const QQ_GROUP_NUMBER = "34310889";
+const EMAIL_ADDRESS = "pansir029@gmail.com";
+---
+
+<!-- 
+  Fuwari 侧边栏小工具集合
+  Layout.astro 已经处理了 sticky 和 space-y，这里只需排列独立的 card。
+-->
+<div class="space-y-4 no-print">
+  
+  <!-- 1. 我的频道 -->
+  <div class="fuwari-card p-4">
+    <h4 class="text-xs font-semibold uppercase text-base-content/60 mb-3 ml-1 tracking-wider">
+      我的频道
+    </h4>
+    <div
+      class="relative flex items-center bg-base-100 dark:bg-base-300 rounded-lg p-2 border border-base-content/10"
+    >
+      <i class="ri-telegram-fill text-[var(--primary-fuwari)] ml-1 mr-2 text-lg"></i>
+      <span
+        id="telegram-channel-link"
+        class="text-sm font-mono text-base-content/80 select-all"
+        >@allfree123</span
+      >
+      <button
+        id="copy-channel-btn"
+        type="button"
+        class="btn btn-ghost btn-sm btn-circle absolute right-1 hover:bg-[var(--primary-fuwari)]/10 hover:text-[var(--primary-fuwari)]"
+        aria-label="复制频道地址"
+      >
+        <i class="ri-file-copy-line copy-icon text-base"></i>
+        <i class="ri-check-line success-icon hidden text-base text-emerald-500"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. 文章目录 或 站点统计+联系方式 -->
+  {
+    headings && headings.length > 0 ? (
+      // 如果有目录，则显示目录卡片 (TOC 内部需适配 fuwari-card)
+      <TOC headings={headings} />
+    ) : (
+      // 否则显示统计与联系方式
+      <>
+        <!-- 站点统计 -->
+        <div class="fuwari-card p-5">
+          <h3 class="font-semibold text-base mb-5 flex items-center">
+            <i class="ri-bar-chart-fill text-[var(--primary-fuwari)] mr-2.5 text-lg" />
+            站点统计
+          </h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center gap-3 bg-base-200/50 rounded-lg p-3 border border-base-content/5">
+              <i class="ri-article-line text-3xl text-[var(--primary-fuwari)]/70" />
+              <div>
+                <p class="text-2xl font-bold leading-tight">
+                  {stats.articles}
+                </p>
+                <p class="text-xs text-base-content/60">篇文章</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 bg-base-200/50 rounded-lg p-3 border border-base-content/5">
+              <i class="ri-file-word-2-line text-3xl text-[var(--primary-fuwari)]/70" />
+              <div>
+                <p class="text-2xl font-bold leading-tight">
+                  {stats.words}
+                </p>
+                <p class="text-xs text-base-content/60">总字数</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 联系方式 -->
+        <div class="fuwari-card p-4">
+          <h3 class="font-semibold text-base mb-4 flex items-center ml-1">
+            <i class="ri-contacts-book-line text-[var(--primary-fuwari)] mr-2.5 text-lg" />
+            联系方式
+          </h3>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              id="copy-qq-btn"
+              class="fuwari-btn btn-sm w-full"
+              data-qq-number={QQ_GROUP_NUMBER}
+            >
+              <i class="ri-qq-line mr-1" />
+              复制QQ
+            </button>
+            <a
+              href={`mailto:${EMAIL_ADDRESS}`}
+              class="fuwari-btn btn-sm w-full"
+            >
+              <i class="ri-mail-send-line mr-1" />
+              发送邮件
+            </a>
+          </div>
+        </div>
+      </>
+    )
+  }
+</div>
+
+<!-- 脚本逻辑保持原样，仅修正了部分选择器 -->
+<script define:vars={{ QQ_GROUP_NUMBER }}>
+  const initSidebar = () => {
+    const copyChannelBtn = document.getElementById("copy-channel-btn");
+    const channelLinkElement = document.getElementById("telegram-channel-link");
+
+    if (copyChannelBtn && channelLinkElement) {
+      const copyIcon = copyChannelBtn.querySelector(".copy-icon");
+      const successIcon = copyChannelBtn.querySelector(".success-icon");
+
+      copyChannelBtn.addEventListener("click", async () => {
+        const textToCopy = channelLinkElement.textContent;
+        if (!textToCopy || !copyIcon || !successIcon) return;
+        try {
+          await navigator.clipboard.writeText(textToCopy);
+          copyIcon.classList.add("hidden");
+          successIcon.classList.remove("hidden");
+          setTimeout(() => {
+            successIcon.classList.add("hidden");
+            copyIcon.classList.remove("hidden");
+          }, 2000);
+        } catch (err) {
+          console.error("无法复制频道地址:", err);
+        }
+      });
+    }
+
+    const copyQqBtn = document.getElementById("copy-qq-btn");
+    if (copyQqBtn) {
+      const originalText = copyQqBtn.innerHTML;
+
+      copyQqBtn.addEventListener("click", () => {
+        if (!QQ_GROUP_NUMBER) return;
+
+        navigator.clipboard
+          .writeText(QQ_GROUP_NUMBER)
+          .then(() => {
+            copyQqBtn.innerHTML = '<i class="ri-check-line"></i> 复制成功';
+            copyQqBtn.classList.add("!bg-emerald-500", "no-animation");
+            setTimeout(() => {
+              copyQqBtn.innerHTML = originalText;
+              copyQqBtn.classList.remove("!bg-emerald-500", "no-animation");
+            }, 2000);
+          })
+          .catch((err) => {
+            console.error("无法复制QQ号: ", err);
+            copyQqBtn.innerHTML = '<i class="ri-close-line"></i> 复制失败';
+            copyQqBtn.classList.add("!bg-red-500");
+            setTimeout(() => {
+              copyQqBtn.innerHTML = originalText;
+              copyQqBtn.classList.remove("!bg-red-500");
+            }, 2000);
+          });
+      });
+    }
+  };
+
+  // 支持 Astro 的视图过渡 (如果启用了)
+  document.addEventListener("DOMContentLoaded", initSidebar);
+  document.addEventListener("astro:after-swap", initSidebar);
+</script>
