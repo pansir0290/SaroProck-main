@@ -1,6 +1,7 @@
 ---
 // src/pages/index.astro
 import Layout from "@layouts/Layout.astro";
+import TelegramLayout from "@layouts/TelegramLayout.astro";
 import FeedCard from "@components/feed/FeedCard.astro";
 import Pagination from "@components/feed/Pagination.astro";
 import { getChannelFeed } from "@/lib/telegram";
@@ -16,7 +17,7 @@ const { posts } = await getChannelFeed(Astro, {
   q: q || undefined,
 });
 
-const hasPosts = posts && posts.length > 0;
+const hasPosts = posts.length > 0;
 const beforeCursor = hasPosts ? posts[posts.length - 1].id : null;
 const afterCursor = hasPosts ? posts[0].id : null;
 
@@ -35,9 +36,9 @@ if (q) {
 ---
 
 <Layout title="首页">
-  <div class="space-y-4">
+  <TelegramLayout>
     {
-      infoMessage ? (
+      infoMessage && (
         <div role="alert" class="alert rounded-xl text-sm mb-4">
           <i class="ri-information-line" />
           <span set:html={infoMessage} />
@@ -46,11 +47,11 @@ if (q) {
             返回最新
           </a>
         </div>
-      ) : null
+      )
     }
 
     {
-      hasPosts ? (
+      posts.length > 0 ? (
         posts.map((post, index) => (
           <FeedCard post={post} isLastItem={index === posts.length - 1} />
         ))
@@ -58,20 +59,20 @@ if (q) {
         <div class="text-center text-base-content/60 py-12">
           <i class="ri-compass-3-line text-4xl" />
           <p class="mt-4">没有找到任何动态。</p>
-          {q ? <p class="text-xs mt-1">请尝试更换搜索关键词。</p> : null}
+          {q && <p class="text-xs mt-1">请尝试更换搜索关键词。</p>}
         </div>
       )
     }
 
     {
-      showPagination && hasPosts ? (
+      showPagination && posts.length > 0 && (
         <Pagination
           beforeCursor={beforeCursor}
           afterCursor={afterCursor}
           showBefore={showBefore}
           showAfter={showAfter}
         />
-      ) : null
+      )
     }
-  </div>
+  </TelegramLayout>
 </Layout>
