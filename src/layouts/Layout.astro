@@ -10,7 +10,6 @@ import Hero from "@components/layout/Hero.astro";
 import Sidebar from "@components/layout/Sidebar.astro";
 import Footer from "@components/layout/Footer.astro";
 import BackToTop from "@components/widgets/BackToTop.astro";
-import FuwariProfile from "@components/FuwariProfile.astro";
 
 const SITE_TITLE = "サンpansir的随笔";
 const SITE_DESCRIPTION = "一个孤独的地方，散落着一个人的人生碎片";
@@ -33,7 +32,6 @@ const {
   description = SITE_DESCRIPTION,
   image = OG_IMAGE_DEFAULT,
   headings = [],
-  // 如果不需要首页顶部大 Banner 挤占空间，可改为 showHero = false
   showHero = false, 
 } = Astro.props;
 
@@ -87,24 +85,20 @@ const socialImageURL = new URL(image, Astro.site);
 
     {showHero && <Hero siteDescription={SITE_DESCRIPTION} />}
 
-    <!-- Fuwari 双栏容器 -->
+    <!-- 主容器 -->
     <div
       id="main-content-grid"
       class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6"
     >
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        <!-- 侧边栏：取消重复区域，仅保留顶部单个 FuwariProfile 与必选部件 -->
-        <aside class="lg:col-span-1 space-y-4 lg:sticky lg:top-20">
-          <FuwariProfile />
-          
-          <Sidebar
-            headings={headings}
-            author={SITE_AUTHOR}
-            twitterHandle={TWITTER_HANDLE}
-            githubUrl={GITHUB_URL}
-            telegramUrl={TELEGRAM_URL}
-          />
-        </aside>
+        <!-- 侧边栏：恢复单卡片结构，直接挂载 Sidebar -->
+        <Sidebar
+          headings={headings}
+          author={SITE_AUTHOR}
+          twitterHandle={TWITTER_HANDLE}
+          githubUrl={GITHUB_URL}
+          telegramUrl={TELEGRAM_URL}
+        />
 
         <!-- 主内容区 -->
         <main class="lg:col-span-3 min-h-[60vh] space-y-6">
