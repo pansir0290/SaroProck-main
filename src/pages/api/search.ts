@@ -48,25 +48,42 @@ export const POST: APIRoute = async (context) => {
     // 1. 获取常规博客文章
     const blogPosts = await getAllPostsWithShortLinks(site);
 
-    // 2. 通过 Telegram SDK/接口获取动态（传入搜索关键词 q，让后端/Telegram也预筛选一次）
-    let tgPosts: any[] = [];
+    // 2. 获取 Telegram 动态数据 (同时试探带 q 和不带 q 的调用，防止后端接口不支持 q 参数导致返回空数组)
+    let rawPosts: any[] = [];
     try {
-      const feedResult = await getChannelFeed(context, { q: query.trim() });
-      tgPosts = feedResult?.posts || [];
+      // 优先直接获取最新的动态列表
+      const feedResult = await getChannelFeed(context, {});
+      rawPosts = feedResult?.posts || (Array.isArray(feedResult) ? feedResult : []);
     } catch (e) {
-      console.error("Failed to fetch telegram feed for search:", e);
+      console.error("[Search Debug] getChannelFeed Error:", e);
     }
 
-    // 格式化 Telegram 动态为统一的数据格式
-    const formattedTgPosts = tgPosts.map((post) => {
-      // 提炼正文作为文本内容，并抓取前30字作为标题
-      const contentStr = post.content || post.text || post.body || "";
+    // 打印调试日志（可以在终端/控制台看到拉取到了多少条 TG 动态）
+    console.log(`[Search Debug] 成功获取到的 TG 动态数量: ${rawPosts.length}`);
+    if (rawPosts.length > 0) {
+      console.log("[Search Debug] 第一条动态数据结构示例:", JSON.stringify(rawPosts[0]));
+    }
+
+    // 格式化 Telegram 动态：全方位兼容不同字段名
+    const formattedTgPosts = rawPosts.map((post) => {
+      // 兼容可能存放正文的各种字段
+      const rawContent = 
+        post.content || 
+        post.text || 
+        post.caption || 
+        post.message || 
+        post.body || 
+        (typeof post === "string" ? post : "");
+
+      const contentStr = String(rawContent);
       const cleanText = contentStr.replace(/^[#\s]+/gm, "").trim();
+      
+      // 提取标题
       const firstLine = cleanText.split("\n")[0] || "TG 动态";
       const title = firstLine.length > 30 ? `${firstLine.slice(0, 30)}...` : firstLine;
 
-      // 动态链接拼接到首页锚点或具体的动态路径
-      const targetUrl = post.id ? `/?before=${Number(post.id) + 1}#${post.id}` : "/";
+      // 锚点或网页链接
+      const targetUrl = post.id ? `/#${post.id}` : "/";
 
       return {
         data: {
