@@ -32,11 +32,15 @@ export const POST: APIRoute = async (context) => {
     const body = (await request.json()) as SearchQuery;
     const { query, tags, categories } = body;
 
-    // --- 查询参数校验 ---
-    if (!query || typeof query !== "string" || query.length < 2) {
+    // --- 查询参数校验：支持单字搜索（比如“兔”） ---
+    if (!query || typeof query !== "string" || query.trim().length === 0) {
       return new Response(JSON.stringify({ error: "Invalid search query." }), { status: 400 });
     }
-    const keywords = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    
+    // 拆分关键词并小写化
+    const rawKeywords = query.trim().split(/\s+/).filter(Boolean);
+    const keywords = rawKeywords.map((k) => k.toLowerCase());
+
     if (keywords.length === 0) {
       return new Response(JSON.stringify({ error: "No valid keywords." }), { status: 400 });
     }
@@ -48,25 +52,17 @@ export const POST: APIRoute = async (context) => {
     // 1. 获取常规博客文章
     const blogPosts = await getAllPostsWithShortLinks(site);
 
-    // 2. 获取 Telegram 动态数据 (同时试探带 q 和不带 q 的调用，防止后端接口不支持 q 参数导致返回空数组)
+    // 2. 获取 Telegram 动态数据
     let rawPosts: any[] = [];
     try {
-      // 优先直接获取最新的动态列表
       const feedResult = await getChannelFeed(context, {});
       rawPosts = feedResult?.posts || (Array.isArray(feedResult) ? feedResult : []);
     } catch (e) {
       console.error("[Search Debug] getChannelFeed Error:", e);
     }
 
-    // 打印调试日志（可以在终端/控制台看到拉取到了多少条 TG 动态）
-    console.log(`[Search Debug] 成功获取到的 TG 动态数量: ${rawPosts.length}`);
-    if (rawPosts.length > 0) {
-      console.log("[Search Debug] 第一条动态数据结构示例:", JSON.stringify(rawPosts[0]));
-    }
-
-    // 格式化 Telegram 动态：全方位兼容不同字段名
+    // 格式化 Telegram 动态
     const formattedTgPosts = rawPosts.map((post) => {
-      // 兼容可能存放正文的各种字段
       const rawContent = 
         post.content || 
         post.text || 
@@ -78,11 +74,8 @@ export const POST: APIRoute = async (context) => {
       const contentStr = String(rawContent);
       const cleanText = contentStr.replace(/^[#\s]+/gm, "").trim();
       
-      // 提取标题
       const firstLine = cleanText.split("\n")[0] || "TG 动态";
       const title = firstLine.length > 30 ? `${firstLine.slice(0, 30)}...` : firstLine;
-
-      // 锚点或网页链接
       const targetUrl = post.id ? `/#${post.id}` : "/";
 
       return {
@@ -125,23 +118,29 @@ export const POST: APIRoute = async (context) => {
             contentText = post.body || "";
           }
 
+          const lowerTitle = title.toLowerCase();
+          const lowerContent = contentText.toLowerCase();
+
           let matchScore = 0;
           const matchDetails = { title: false, categories: false, tags: false, content: false };
 
-          for (const keyword of keywords) {
-            if (title.toLowerCase().includes(keyword)) {
+          for (let i = 0; i < keywords.length; i++) {
+            const keyword = keywords[i];
+            const rawKeyword = rawKeywords[i];
+
+            if (lowerTitle.includes(keyword) || title.includes(rawKeyword)) {
               matchScore += 100;
               matchDetails.title = true;
             }
-            if (tags.some((t: string) => t.toLowerCase().includes(keyword))) {
+            if (tags.some((t: string) => t.toLowerCase().includes(keyword) || t.includes(rawKeyword))) {
               matchScore += 30;
               matchDetails.tags = true;
             }
-            if (categories.some((c: string) => c.toLowerCase().includes(keyword))) {
+            if (categories.some((c: string) => c.toLowerCase().includes(keyword) || c.includes(rawKeyword))) {
               matchScore += 50;
               matchDetails.categories = true;
             }
-            if (contentText.toLowerCase().includes(keyword)) {
+            if (lowerContent.includes(keyword) || contentText.includes(rawKeyword)) {
               matchScore += 10;
               matchDetails.content = true;
             }
@@ -151,9 +150,9 @@ export const POST: APIRoute = async (context) => {
 
           let snippet = description || "";
           if (matchDetails.content || !snippet) {
-            const contentMatchIndex = contentText
-              .toLowerCase()
-              .indexOf(keywords.find((k) => contentText.toLowerCase().includes(k)) || "");
+            const contentMatchIndex = lowerContent.indexOf(
+              keywords.find((k) => lowerContent.includes(k)) || ""
+            );
             if (contentMatchIndex !== -1) {
               const startIndex = Math.max(0, contentMatchIndex - 50);
               snippet = `${startIndex > 0 ? "..." : ""}${contentText.substring(
@@ -183,7 +182,7 @@ export const POST: APIRoute = async (context) => {
 
     const formattedResults = filteredResults.map((result) => ({
       ...result,
-      keywords,
+      keywords: rawKeywords,
     }));
 
     return new Response(JSON.stringify(formattedResults), {
