@@ -1,19 +1,12 @@
 ---
 // src/layouts/TelegramLayout.astro
+import ChannelProfile from "@components/telegram/ChannelProfile.astro";
+import { getChannelInfo } from "@/lib/telegram";
+
+const channelInfo = await getChannelInfo(Astro);
 ---
 
-<section class="flex flex-col gap-8">
-  <header class="mb-4">
-    <h1 class="text-3xl font-bold flex items-center gap-3">
-      <i class="ri-quill-pen-line text-primary"></i>
-      <span>サンpansir的随笔</span>
-    </h1>
-    <p class="text-base-content/70 mt-2">
-      一些随性的记录和不成熟的想法，漂浮在时间的河流里。
-    </p>
-  </header>
-
-  <div id="dynamic-feed-container" class="flex flex-col gap-4">
-    <slot />
-  </div>
-</section>
+<div class="space-y-6">
+  <!-- 已经删除了内部重复的标题与背景 Banner，仅保留子组件内容 -->
+  <slot />
+</div>
