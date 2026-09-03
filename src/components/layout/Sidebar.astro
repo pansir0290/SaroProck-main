@@ -44,64 +44,58 @@ const EMAIL_ADDRESS = "pansir029@gmail.com";
       headings && headings.length > 0 ? (
         <TOC headings={headings} />
       ) : (
-        /* 右侧悬浮卡片：包含频道、统计与联系方式 */
-        <div class="bg-base-200/40 backdrop-blur-md rounded-2xl p-4 border border-base-content/10 shadow-sm space-y-4">
+        /* 极致紧凑型单卡片 */
+        <div class="bg-base-200/40 backdrop-blur-md rounded-2xl p-3 border border-base-content/10 shadow-sm space-y-3">
           
-          <!-- 1. 我的频道 -->
-          <div>
-            <div class="text-xs font-semibold uppercase text-base-content/60 mb-2 flex items-center">
-              <i class="ri-telegram-line mr-1.5 text-primary text-sm"></i>
-              我的频道
+          <!-- 1. 站点数据（左右双列极简排版） -->
+          <div class="grid grid-cols-2 gap-2 text-center">
+            <div class="flex items-center justify-center gap-2 bg-base-100/60 rounded-xl p-2 border border-base-content/5">
+              <i class="ri-article-line text-lg text-primary"></i>
+              <div class="text-left leading-none">
+                <p class="text-sm font-bold text-base-content">{stats.articles}</p>
+                <p class="text-[10px] text-base-content/50 scale-90 -ml-1">文章</p>
+              </div>
             </div>
-            <div class="relative flex items-center bg-base-100/80 rounded-xl p-2 border border-base-content/10">
-              <i class="ri-telegram-fill text-primary ml-1 mr-2 text-base"></i>
-              <span id="telegram-channel-link" class="text-xs font-mono text-base-content/80 select-all">
-                @allfree123
-              </span>
+            <div class="flex items-center justify-center gap-2 bg-base-100/60 rounded-xl p-2 border border-base-content/5">
+              <i class="ri-file-word-2-line text-lg text-primary"></i>
+              <div class="text-left leading-none">
+                <p class="text-sm font-bold text-base-content">{stats.words}</p>
+                <p class="text-[10px] text-base-content/50 scale-90 -ml-1">总字数</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. 频道与联系方式整合（三列网格布局，高密度展示） -->
+          <div>
+            <div class="text-[11px] font-semibold uppercase text-base-content/50 mb-1.5 px-1 flex items-center">
+              <i class="ri-links-line mr-1 text-primary"></i>
+              频道与联系
+            </div>
+            
+            <!-- Telegram 频道条目 -->
+            <div class="relative flex items-center justify-between bg-base-100/80 rounded-xl px-2.5 py-1.5 border border-base-content/10 mb-1.5">
+              <div class="flex items-center gap-1.5 overflow-hidden">
+                <i class="ri-telegram-fill text-primary text-sm flex-shrink-0"></i>
+                <span id="telegram-channel-link" class="text-xs font-mono text-base-content/80 truncate">
+                  @allfree123
+                </span>
+              </div>
               <button
                 id="copy-channel-btn"
                 type="button"
-                class="btn btn-ghost btn-xs btn-circle absolute right-1 hover:text-primary"
-                aria-label="复制频道地址"
+                class="btn btn-ghost btn-xs btn-circle hover:text-primary flex-shrink-0"
+                aria-label="复制频道"
               >
-                <i class="ri-file-copy-fill copy-icon"></i>
-                <i class="ri-check-line success-icon hidden text-emerald-500"></i>
+                <i class="ri-file-copy-fill copy-icon text-xs"></i>
+                <i class="ri-check-line success-icon hidden text-emerald-500 text-xs"></i>
               </button>
             </div>
-          </div>
 
-          <div class="border-t border-base-content/10"></div>
-
-          <!-- 2. 站点统计 -->
-          <div>
-            <div class="text-xs font-semibold uppercase text-base-content/60 mb-2.5 flex items-center">
-              <i class="ri-bar-chart-box-line mr-1.5 text-primary text-sm"></i>
-              站点统计
-            </div>
-            <div class="grid grid-cols-2 gap-2 text-center">
-              <div class="bg-base-100/60 rounded-xl p-2 border border-base-content/5">
-                <p class="text-lg font-bold leading-tight text-base-content/90">{stats.articles}</p>
-                <p class="text-[10px] text-base-content/60 mt-0.5">篇文章</p>
-              </div>
-              <div class="bg-base-100/60 rounded-xl p-2 border border-base-content/5">
-                <p class="text-lg font-bold leading-tight text-base-content/90">{stats.words}</p>
-                <p class="text-[10px] text-base-content/60 mt-0.5">总字数</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="border-t border-base-content/10"></div>
-
-          <!-- 3. 联系方式 -->
-          <div>
-            <div class="text-xs font-semibold uppercase text-base-content/60 mb-2.5 flex items-center">
-              <i class="ri-contacts-line mr-1.5 text-primary text-sm"></i>
-              联系方式
-            </div>
-            <div class="grid grid-cols-2 gap-2">
+            <!-- 快捷按钮左右并排 -->
+            <div class="grid grid-cols-2 gap-1.5">
               <button
                 id="copy-qq-btn"
-                class="btn btn-xs btn-outline rounded-lg font-normal border-base-content/20 hover:border-primary hover:bg-primary hover:text-primary-content"
+                class="btn btn-xs btn-outline rounded-lg font-normal text-[11px] h-7 min-h-0 border-base-content/15 hover:border-primary hover:bg-primary hover:text-primary-content"
                 data-qq-number={QQ_GROUP_NUMBER}
               >
                 <i class="ri-qq-line"></i>
@@ -109,7 +103,7 @@ const EMAIL_ADDRESS = "pansir029@gmail.com";
               </button>
               <a
                 href={`mailto:${EMAIL_ADDRESS}`}
-                class="btn btn-xs btn-outline rounded-lg font-normal border-base-content/20 hover:border-primary hover:bg-primary hover:text-primary-content"
+                class="btn btn-xs btn-outline rounded-lg font-normal text-[11px] h-7 min-h-0 border-base-content/15 hover:border-primary hover:bg-primary hover:text-primary-content"
               >
                 <i class="ri-mail-send-line"></i>
                 发邮件
