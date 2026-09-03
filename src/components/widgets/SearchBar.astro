@@ -1,3 +1,4 @@
+
 ---
 import { Icon } from "astro-icon/components";
 ---
@@ -5,15 +6,15 @@ import { Icon } from "astro-icon/components";
 <div class="search-container relative">
   <div
     id="search-bar"
-    class="search-bar-collapsed flex items-center rounded-xl bg-base-200 transition-transform duration-300 cursor-text"
+    class="search-bar-collapsed flex items-center rounded-full bg-base-200/80 border border-base-content/10 transition-all duration-300 cursor-text h-8 px-2.5 w-28 sm:w-36"
   >
-    <div class="search-icon px-2">
-      <Icon name="lucide:search" class="w-4 h-4 stroke-current" />
+    <div class="search-icon flex-shrink-0 mr-1.5">
+      <Icon name="lucide:search" class="w-3.5 h-3.5 text-base-content/50" />
     </div>
     <input
       type="text"
       id="search-input"
-      class="search-input w-full bg-transparent border-none outline-none text-base py-1 transition-transform duration-300"
+      class="search-input w-full bg-transparent border-none outline-none text-xs py-1 transition-opacity duration-300"
       placeholder="搜索..."
       autocomplete="off"
     />
@@ -26,56 +27,54 @@ import { Icon } from "astro-icon/components";
   >
     <!-- 窗口标题栏 -->
     <div
-      class="bg-base-200 py-3 px-4 flex items-center justify-between border-b border-base-300 rounded-xl"
+      class="bg-base-200 py-2.5 px-4 flex items-center justify-between border-b border-base-300 rounded-t-xl"
     >
-      <div class="flex items-center gap-3">
-        <Icon name="lucide:search" class="w-5 h-5 text-primary" />
-        <h3 class="font-medium">搜索结果</h3>
+      <div class="flex items-center gap-2">
+        <Icon name="lucide:search" class="w-4 h-4 text-primary" />
+        <h3 class="font-medium text-sm">搜索结果</h3>
       </div>
       <div class="flex items-center gap-2">
         <div class="dropdown dropdown-end">
-          <div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-1">
-            <Icon name="lucide:filter" class="w-4 h-4" />
+          <div tabindex="0" role="button" class="btn btn-xs btn-ghost gap-1">
+            <Icon name="lucide:filter" class="w-3.5 h-3.5" />
             <span>筛选</span>
           </div>
           <div
-            class="card dropdown-content z-[1] shadow-lg bg-base-200 rounded-xl w-72"
+            class="card dropdown-content z-[1] shadow-lg bg-base-200 rounded-xl w-72 mt-2"
           >
             <div class="card-body p-4 gap-3">
-              <h6 class="font-semibold text-base">标签</h6>
+              <h6 class="font-semibold text-sm">标签</h6>
               <div class="max-h-40 overflow-y-auto pr-1" id="tag-filters">
-                <label class="flex items-center mb-2">
+                <label class="flex items-center mb-2 text-xs">
                   <input
                     type="checkbox"
-                    class="checkbox checkbox-sm checkbox-primary mr-2"
+                    class="checkbox checkbox-xs checkbox-primary mr-2"
                     value="all"
                     checked
                   />
                   <span>全部</span>
                 </label>
-                <!-- 标签将通过 JavaScript 动态加载 -->
               </div>
 
-              <div class="divider my-1"></div>
+              <div class="divider my-0.5"></div>
 
-              <h6 class="font-semibold text-base">分类</h6>
+              <h6 class="font-semibold text-sm">分类</h6>
               <div class="max-h-40 overflow-y-auto pr-1" id="category-filters">
-                <label class="flex items-center mb-2">
+                <label class="flex items-center mb-2 text-xs">
                   <input
                     type="checkbox"
-                    class="checkbox checkbox-sm checkbox-primary mr-2"
+                    class="checkbox checkbox-xs checkbox-primary mr-2"
                     value="all"
                     checked
                   />
                   <span>全部</span>
                 </label>
-                <!-- 分类将通过 JavaScript 动态加载 -->
               </div>
             </div>
           </div>
         </div>
         <button
-          class="btn btn-sm btn-circle btn-ghost text-base-content/70 hover:text-error transition-colors"
+          class="btn btn-xs btn-circle btn-ghost text-base-content/70 hover:text-error transition-colors"
           id="close-search-dropdown"
         >
           <Icon name="lucide:x" class="w-4 h-4" />
@@ -86,19 +85,27 @@ import { Icon } from "astro-icon/components";
     <!-- 搜索结果容器 -->
     <div
       id="search-results"
-      class="search-results-container p-4 max-h-[60vh] overflow-y-auto"
+      class="search-results-container p-3 max-h-[60vh] overflow-y-auto"
     >
       <div class="text-base-content/70 text-center py-8">
-        <Icon name="lucide:search" class="w-12 h-12 mx-auto mb-3 opacity-20" />
-        <p>请输入关键词开始搜索</p>
+        <Icon name="lucide:search" class="w-10 h-10 mx-auto mb-2 opacity-20" />
+        <p class="text-xs">请输入关键词开始搜索</p>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-  // 当组件加载后执行
-  document.addEventListener("DOMContentLoaded", setupSearch);
+  document.addEventListener("DOMContentLoaded", initSearch);
+  document.addEventListener("astro:page-load", initSearch);
+
+  if (document.readyState !== "loading") {
+    initSearch();
+  }
+
+  function initSearch() {
+    setupSearch();
+  }
 
   function setupSearch() {
     const searchBar = document.getElementById("search-bar") as HTMLElement;
@@ -120,32 +127,30 @@ import { Icon } from "astro-icon/components";
     )
       return;
 
-    // 初始化搜索框状态
+    if (searchBar.dataset.searchInitialized === "true") return;
+    searchBar.dataset.searchInitialized = "true";
+
     let isSearchExpanded = false;
 
-    // 点击搜索栏时展开
     searchBar.addEventListener("click", () => {
       if (!isSearchExpanded) {
         expandSearchBar();
       }
     });
 
-    // 展开搜索栏
     function expandSearchBar() {
-      searchBar.classList.remove("search-bar-collapsed");
-      searchBar.classList.add("search-bar-expanded", "w-52", "sm:w-64");
+      searchBar.classList.remove("search-bar-collapsed", "w-28", "sm:w-36");
+      searchBar.classList.add("search-bar-expanded", "w-36", "sm:w-48");
       searchInput.focus();
       isSearchExpanded = true;
 
-      // 加载标签和分类列表
       loadTagsAndCategories();
     }
 
-    // 关闭搜索框
     function collapseSearchBar() {
       if (!searchInput.value.trim()) {
-        searchBar.classList.remove("search-bar-expanded", "w-48", "sm:w-64");
-        searchBar.classList.add("search-bar-collapsed");
+        searchBar.classList.remove("search-bar-expanded", "w-36", "sm:w-48");
+        searchBar.classList.add("search-bar-collapsed", "w-28", "sm:w-36");
         isSearchExpanded = false;
       }
 
@@ -154,14 +159,12 @@ import { Icon } from "astro-icon/components";
       }
     }
 
-    // 点击关闭按钮
     closeSearchDropdown.addEventListener("click", (e: Event) => {
       e.stopPropagation();
       searchResultsDropdown.classList.add("hidden");
       collapseSearchBar();
     });
 
-    // 按ESC键关闭
     document.addEventListener("keydown", (e: KeyboardEvent) => {
       if (e.key === "Escape" && isSearchExpanded) {
         collapseSearchBar();
@@ -169,7 +172,6 @@ import { Icon } from "astro-icon/components";
       }
     });
 
-    // 点击外部区域关闭
     document.addEventListener("click", (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const isSearchContainer = target.closest(".search-container");
@@ -178,7 +180,6 @@ import { Icon } from "astro-icon/components";
       }
     });
 
-    // 搜索输入处理
     let debounceTimer: number;
     searchInput.addEventListener("input", (e: Event) => {
       const target = e.target as HTMLInputElement;
@@ -186,27 +187,23 @@ import { Icon } from "astro-icon/components";
       debounceTimer = window.setTimeout(() => {
         const query = target.value.trim();
 
-        if (query.length < 2) {
+        if (query.length < 1) {
           searchResultsDropdown.classList.add("hidden");
           return;
         }
 
-        // 显示搜索结果下拉框
         searchResultsDropdown.classList.remove("hidden");
 
-        // 获取选中的标签和分类
         const selectedTags = getSelectedValues("tag-filters");
         const selectedCategories = getSelectedValues("category-filters");
 
-        // 执行搜索
         performSearch(query, selectedTags, selectedCategories);
       }, 300);
     });
 
-    // 焦点时显示下拉框（如果有查询）
     searchInput.addEventListener("focus", () => {
       const query = searchInput.value.trim();
-      if (query.length >= 2) {
+      if (query.length >= 1) {
         searchResultsDropdown.classList.remove("hidden");
       }
     });
@@ -214,16 +211,13 @@ import { Icon } from "astro-icon/components";
 
   async function loadTagsAndCategories() {
     try {
-      // 从 API 端点获取所有标签和分类
       const response = await fetch("/api/content-metadata");
       if (!response.ok) throw new Error("Failed to fetch content metadata");
 
       const { tags, categories } = await response.json();
 
-      // 填充标签过滤器
       const tagFiltersContainer = document.getElementById("tag-filters");
-      if (tagFiltersContainer && tags.length) {
-        // 清除现有的子元素，但保留"全部"选项
+      if (tagFiltersContainer && tags?.length) {
         const allOption = tagFiltersContainer
           .querySelector('input[value="all"]')
           ?.closest("label");
@@ -231,14 +225,13 @@ import { Icon } from "astro-icon/components";
           tagFiltersContainer.innerHTML = "";
           tagFiltersContainer.appendChild(allOption);
 
-          // 添加标签
           tags.forEach((tag: string) => {
             const label = document.createElement("label");
-            label.className = "flex items-center mb-2";
+            label.className = "flex items-center mb-2 text-xs";
 
             const checkbox = document.createElement("input");
             checkbox.type = "checkbox";
-            checkbox.className = "checkbox checkbox-sm checkbox-primary mr-2";
+            checkbox.className = "checkbox checkbox-xs checkbox-primary mr-2";
             checkbox.value = tag;
 
             const span = document.createElement("span");
@@ -251,11 +244,9 @@ import { Icon } from "astro-icon/components";
         }
       }
 
-      // 填充分类过滤器
       const categoryFiltersContainer =
         document.getElementById("category-filters");
-      if (categoryFiltersContainer && categories.length) {
-        // 清除现有的子元素，但保留"全部"选项
+      if (categoryFiltersContainer && categories?.length) {
         const allOption = categoryFiltersContainer
           .querySelector('input[value="all"]')
           ?.closest("label");
@@ -263,14 +254,13 @@ import { Icon } from "astro-icon/components";
           categoryFiltersContainer.innerHTML = "";
           categoryFiltersContainer.appendChild(allOption);
 
-          // 添加分类
           categories.forEach((category: string) => {
             const label = document.createElement("label");
-            label.className = "flex items-center mb-2";
+            label.className = "flex items-center mb-2 text-xs";
 
             const checkbox = document.createElement("input");
             checkbox.type = "checkbox";
-            checkbox.className = "checkbox checkbox-sm checkbox-primary mr-2";
+            checkbox.className = "checkbox checkbox-xs checkbox-primary mr-2";
             checkbox.value = category;
 
             const span = document.createElement("span");
@@ -283,11 +273,9 @@ import { Icon } from "astro-icon/components";
         }
       }
 
-      // 设置复选框逻辑
       setupCheckboxLogic("tag-filters");
       setupCheckboxLogic("category-filters");
 
-      // 为筛选器添加变更事件
       document
         .querySelectorAll("#tag-filters input, #category-filters input")
         .forEach((checkbox) => {
@@ -298,7 +286,7 @@ import { Icon } from "astro-icon/components";
             if (!searchInput) return;
 
             const query = searchInput.value.trim();
-            if (query.length >= 2) {
+            if (query.length >= 1) {
               const selectedTags = getSelectedValues("tag-filters");
               const selectedCategories = getSelectedValues("category-filters");
               performSearch(query, selectedTags, selectedCategories);
@@ -321,7 +309,6 @@ import { Icon } from "astro-icon/components";
       container.querySelectorAll('input[type="checkbox"]:not([value="all"])'),
     ) as HTMLInputElement[];
 
-    // 点击"全部"选项时的逻辑
     allCheckbox?.addEventListener("change", () => {
       if (allCheckbox.checked) {
         otherCheckboxes.forEach((cb) => {
@@ -330,14 +317,11 @@ import { Icon } from "astro-icon/components";
       }
     });
 
-    // 点击其他选项时的逻辑
     otherCheckboxes.forEach((checkbox) => {
       checkbox.addEventListener("change", () => {
-        // 如果有任何其他选项被选中，取消选中"全部"
         const anyOtherChecked = otherCheckboxes.some((cb) => cb.checked);
         if (allCheckbox) allCheckbox.checked = !anyOtherChecked;
 
-        // 如果没有任何选项被选中，重新选中"全部"
         if (!anyOtherChecked && allCheckbox) {
           allCheckbox.checked = true;
         }
@@ -352,7 +336,7 @@ import { Icon } from "astro-icon/components";
     const allCheckbox = container.querySelector(
       'input[value="all"]',
     ) as HTMLInputElement;
-    if (allCheckbox?.checked) return []; // 如果选择了"全部"，返回空数组表示不过滤
+    if (allCheckbox?.checked) return [];
 
     return Array.from(
       container.querySelectorAll('input[type="checkbox"]:checked'),
@@ -367,39 +351,35 @@ import { Icon } from "astro-icon/components";
     const searchResults = document.getElementById("search-results");
     if (!searchResults) return;
 
-    // 显示加载状态
     searchResults.innerHTML = `
       <div class="flex flex-col items-center justify-center py-8">
-        <span class="loading loading-spinner loading-md mb-3"></span>
-          <p class="text-base-content/70">搜索中...</p>
+        <span class="loading loading-spinner loading-md mb-2"></span>
+        <p class="text-xs text-base-content/70">搜索中...</p>
       </div>
     `;
 
     try {
-      // 分割查询关键词（在 UI 层也进行分割，与 API 保持一致）
       const keywords = query
         .trim()
         .split(/\s+/)
-        .filter((keyword) => keyword.length >= 2);
+        .filter((keyword) => keyword.length >= 1);
 
       if (keywords.length === 0) {
         searchResults.innerHTML = `
           <div class="text-center py-8">
-            <Icon name="lucide:x-circle" class="w-12 h-12 mx-auto mb-3 opacity-20" />
-            <p class="text-base-content/70">请输入至少两个字符</p>
+            <p class="text-xs text-base-content/70">请输入有效关键词</p>
           </div>
         `;
         return;
       }
 
-      // 调用搜索 API
       const response = await fetch("/api/search", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          query, // 保持发送完整查询字符串
+          query,
           tags: tags.length > 0 ? tags : undefined,
           categories: categories.length > 0 ? categories : undefined,
         }),
@@ -409,37 +389,38 @@ import { Icon } from "astro-icon/components";
 
       const results = await response.json();
 
-      if (results.length === 0) {
+      if (!Array.isArray(results) || results.length === 0) {
         searchResults.innerHTML = `
-          <div class="text-center py-8">
-            <Icon name="lucide:x-circle" class="w-12 h-12 mx-auto mb-3 opacity-20" />
-            <p class="text-base-content/70">没有匹配的结果</p>
+          <div class="text-center py-8 text-xs text-base-content/70">
+            没有匹配的结果
           </div>
         `;
         return;
       }
 
-      // 显示搜索结果
       const resultsHtml = results
         .map(
           (result: any) => `
-        <a href="${result.url}" class="search-result block p-3 mb-3 hover:bg-base-200 rounded-lg transition-colors duration-300 border-l-4 border-transparent hover:border-primary group">
-          <h3 class="font-semibold text-lg group-hover:text-primary transition-colors">${highlightMatch(result.title, result.keywords)}</h3>
+        <a href="${result.url}" class="search-result block p-2.5 mb-2 hover:bg-base-200 rounded-lg transition-colors duration-300 border-l-2 border-transparent hover:border-primary group">
+          <h3 class="font-medium text-sm text-base-content group-hover:text-primary transition-colors">${highlightMatch(result.title, result.keywords || [query])}</h3>
           ${
             result.snippet
-              ? `
-            <p class="text-base-content/80 mt-2 line-clamp-3">${highlightMatch(result.snippet, result.keywords)}</p>
-          `
+              ? `<p class="text-xs text-base-content/70 mt-1 line-clamp-2">${highlightMatch(result.snippet, result.keywords || [query])}</p>`
               : ""
           }
-          <div class="flex flex-wrap gap-1 mt-3">
-            ${result.categories
+          <div class="flex flex-wrap gap-1 mt-2">
+            ${(result.categories || [])
               .map(
                 (category: string) =>
-                  `<span class="badge badge-neutral ${result.matchDetails.categories ? "badge-primary" : ""}">${highlightMatch(category, result.keywords)}</span>`,
+                  `<span class="badge badge-xs badge-neutral">${highlightMatch(category, result.keywords || [query])}</span>`,
               )
               .join("")}
-            ${result.tags.map((tag: string) => `<span class="badge badge-outline ${result.matchDetails.tags ? "text-primary border-primary" : ""}">${highlightMatch(tag, result.keywords)}</span>`).join("")}
+            ${(result.tags || [])
+              .map(
+                (tag: string) =>
+                  `<span class="badge badge-xs badge-outline">${highlightMatch(tag, result.keywords || [query])}</span>`,
+              )
+              .join("")}
           </div>
         </a>
       `,
@@ -450,9 +431,8 @@ import { Icon } from "astro-icon/components";
     } catch (error) {
       console.error("Error performing search:", error);
       searchResults.innerHTML = `
-        <div class="text-center py-8">
-          <Icon name="lucide:alert-triangle" class="w-12 h-12 mx-auto mb-3 text-error opacity-50" />
-          <p class="text-error">搜索失败，请稍后再试</p>
+        <div class="text-center py-8 text-xs text-error">
+          搜索失败，请稍后再试
         </div>
       `;
     }
@@ -461,25 +441,20 @@ import { Icon } from "astro-icon/components";
   function highlightMatch(text: string, keywords: string[]): string {
     if (!text) return "";
 
-    // 处理多个关键词
     let result = text;
+    const activeKeywords = keywords && keywords.length > 0 ? keywords : [];
 
-    // 按顺序高亮每个关键词（长的先高亮，防止部分匹配问题）
-    keywords
+    activeKeywords
       .slice()
       .sort((a, b) => b.length - a.length)
       .forEach((keyword) => {
-        // 转义正则表达式特殊字符
+        if (!keyword) return;
         const escapedKeyword = keyword.replace(
           /[.*+?^${}()|[\]\\]/g,
-          "\\#{content}",
+          "\\$&",
         );
-
-        // 创建正则表达式以匹配查询（不区分大小写）
         const regex = new RegExp(`(${escapedKeyword})`, "gi");
-
-        // 替换匹配项为带有高亮标记的版本
-        result = result.replace(regex, '<mark class="search-mark">$1</mark>');
+        result = result.replace(regex, '<mark class="bg-primary/20 text-primary px-0.5 rounded">$1</mark>');
       });
 
     return result;
@@ -487,9 +462,7 @@ import { Icon } from "astro-icon/components";
 </script>
 
 <style>
-  /* 搜索框动画 */
   .search-bar-collapsed {
-    width: 200px;
     transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   }
 
@@ -498,70 +471,29 @@ import { Icon } from "astro-icon/components";
   }
 
   .search-input {
-    opacity: 0;
-    transition:
-      width 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-      opacity 0.15s ease;
+    opacity: 0.8;
   }
 
   .search-bar-expanded .search-input {
     opacity: 1;
-    transition:
-      width 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-      opacity 0.3s ease 0.05s;
   }
 
-  /* 搜索结果下拉框样式 */
   .search-results-dropdown {
-    animation: slideDown 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    box-shadow:
-      0 10px 25px -5px rgba(0, 0, 0, 0.1),
-      0 10px 15px -5px rgba(0, 0, 0, 0.05);
+    animation: slideDown 0.2s ease-out forwards;
   }
 
   @keyframes slideDown {
     from {
       opacity: 0;
-      transform: translateY(-8px) scale(0.98);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-
-  /* 为搜索结果容器定义滚动条样式 */
-  .search-results-container {
-    scrollbar-width: thin;
-    scrollbar-color: var(--b3) transparent;
-  }
-
-  .search-results-container::-webkit-scrollbar {
-    width: 5px;
-  }
-
-  .search-results-container::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .search-results-container::-webkit-scrollbar-thumb {
-    background-color: var(--b3);
-    border-radius: 10px;
-  }
-
-  /* 搜索结果的动画效果 */
-  .search-result {
-    animation: fadeIn 0.4s ease forwards;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(5px);
+      transform: translateY(-6px);
     }
     to {
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  .search-results-container {
+    scrollbar-width: thin;
   }
 </style>
