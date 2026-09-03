@@ -49,14 +49,33 @@ export const POST: APIRoute = async (context) => {
       throw new Error("A `site` property is required in your astro.config.mjs for this API route to work.");
     }
 
-    // 1. 获取常规博客文章
+    // 1. 获取常规博客文章（本地 Content Collections 全量文章）
     const blogPosts = await getAllPostsWithShortLinks(site);
 
-    // 2. 获取 Telegram 动态数据
+    // 2. 获取 Telegram 动态数据（并行获取最新动态 + 带关键词 q 的全量历史搜索结果）
     let rawPosts: any[] = [];
     try {
-      const feedResult = await getChannelFeed(context, {});
-      rawPosts = feedResult?.posts || (Array.isArray(feedResult) ? feedResult : []);
+      const trimmedQuery = query.trim();
+      const [latestFeed, searchFeed] = await Promise.all([
+        getChannelFeed(context, {}),
+        getChannelFeed(context, { q: trimmedQuery }),
+      ]);
+
+      const latestPosts = latestFeed?.posts || (Array.isArray(latestFeed) ? latestFeed : []);
+      const searchPosts = searchFeed?.posts || (Array.isArray(searchFeed) ? searchFeed : []);
+
+      // 合并最新动态与搜索结果，并根据 ID 去重
+      const postMap = new Map<string | number, any>();
+      [...latestPosts, ...searchPosts].forEach((p) => {
+        if (p) {
+          const key = p.id || p.targetUrl || JSON.stringify(p);
+          if (!postMap.has(key)) {
+            postMap.set(key, p);
+          }
+        }
+      });
+
+      rawPosts = Array.from(postMap.values());
     } catch (e) {
       console.error("[Search Debug] getChannelFeed Error:", e);
     }
