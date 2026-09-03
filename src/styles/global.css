@@ -3,80 +3,97 @@
 @plugin "@tailwindcss/typography";
 
 /* =========================================================
-   Fuwari Design System (OKLCH Color Engine & Glassmorphism)
+   Fuwari Design System (Tailwind v4 + DaisyUI Compatible)
    ========================================================= */
 
 :root {
-  /* Fuwari 标志性 OKLCH 主题色 Engine */
-  --hue: 250; /* 主色调 Hue (0-360)，修改此数值可更改全站主题色 */
-  --primary-fuwari: oklch(0.65 0.20 var(--hue));
-  --primary-fuwari-hover: oklch(0.60 0.22 var(--hue));
-  --bg-fuwari: oklch(0.97 0.01 var(--hue));
+  /* Fuwari 主题色 Engine (Hue: 0 - 360) */
+  --hue: 250;
+  --primary-fuwari: hsl(var(--hue), 85%, 60%);
+  --primary-fuwari-hover: hsl(var(--hue), 85%, 52%);
+  --bg-fuwari: hsl(var(--hue), 25%, 97%);
   --card-fuwari-bg: rgba(255, 255, 255, 0.85);
-  --card-fuwari-border: rgba(0, 0, 0, 0.06);
-  --text-fuwari-main: oklch(0.25 0.02 var(--hue));
-  --text-fuwari-sub: oklch(0.50 0.03 var(--hue));
-  --radius-fuwari: 1rem; /* 16px 精致大圆角 */
+  --card-fuwari-border: rgba(0, 0, 0, 0.08);
+  --text-fuwari-main: #1a1b26;
+  --text-fuwari-sub: #565f89;
+  --radius-fuwari: 1rem; /* 16px 精致圆角 */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-fuwari: oklch(0.16 0.02 var(--hue));
+    --bg-fuwari: hsl(var(--hue), 20%, 10%);
     --card-fuwari-bg: rgba(26, 27, 38, 0.82);
-    --card-fuwari-border: rgba(255, 255, 255, 0.08);
-    --text-fuwari-main: oklch(0.92 0.01 var(--hue));
-    --text-fuwari-sub: oklch(0.68 0.02 var(--hue));
+    --card-fuwari-border: rgba(255, 255, 255, 0.1);
+    --text-fuwari-main: #c0caf5;
+    --text-fuwari-sub: #a9b1d6;
   }
 }
 
-/* 1. Fuwari 全局背景与平滑过渡 */
+/* 1. 深度覆盖全局背景 */
+html,
 body {
   background-color: var(--bg-fuwari) !important;
-  color: var(--text-fuwari-main);
+  color: var(--text-fuwari-main) !important;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* 2. Fuwari 标志性毛玻璃卡片（自动赋予 FeedCard 和基础 Card 卡片样式） */
-.card,
-[class*="FeedCard"],
-.fuwari-card {
-  background: var(--card-fuwari-bg) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-  border: 1px solid var(--card-fuwari-border) !important;
-  border-radius: var(--radius-fuwari) !important;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04) !important;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+/* 2. 覆盖 DaisyUI 默认的主题变量 */
+:root, [data-theme] {
+  --b1: var(--bg-fuwari) !important;
+  --b2: var(--card-fuwari-bg) !important;
+  --p: var(--primary-fuwari) !important;
 }
 
-/* Fuwari 招牌式的悬浮向上微浮动与动态主题色边框 */
-.card:hover,
-[class*="FeedCard"]:hover,
-.fuwari-card:hover {
-  transform: translateY(-4px) !important;
-  box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.08) !important;
-  border-color: var(--primary-fuwari) !important;
-}
+/* 3. 强制赋予所有卡片 (FeedCard, PostCard, Sidebar, FuwariProfile) 毛玻璃与悬浮微动效 */
+@layer components {
+  .card,
+  .fuwari-card,
+  article,
+  [class*="FeedCard"],
+  [class*="Sidebar"],
+  div[class*="bg-base-"] {
+    background: var(--card-fuwari-bg) !important;
+    backdrop-filter: blur(16px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+    border: 1px solid var(--card-fuwari-border) !important;
+    border-radius: var(--radius-fuwari) !important;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05) !important;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+                box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+                border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
 
-/* 3. Fuwari 风格按钮与交互交互增强 */
-.btn-primary,
-.fuwari-btn {
-  background-color: var(--primary-fuwari) !important;
-  color: #ffffff !important;
-  border-radius: 0.75rem !important;
-  border: none !important;
-  font-weight: 600 !important;
-  transition: all 0.2s ease !important;
-}
+  /* 悬浮上浮 4px + 高亮边框 */
+  .card:hover,
+  .fuwari-card:hover,
+  article:hover,
+  [class*="FeedCard"]:hover,
+  [class*="Sidebar"]:hover {
+    transform: translateY(-4px) !important;
+    border-color: var(--primary-fuwari) !important;
+    box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.12) !important;
+  }
 
-.btn-primary:hover,
-.fuwari-btn:hover {
-  background-color: var(--primary-fuwari-hover) !important;
-  box-shadow: 0 4px 14px oklch(0.65 0.20 var(--hue) / 0.35) !important;
+  /* 按钮 Fuwari 化 */
+  .btn-primary,
+  .fuwari-btn {
+    background-color: var(--primary-fuwari) !important;
+    color: #ffffff !important;
+    border-radius: 0.75rem !important;
+    border: none !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .btn-primary:hover,
+  .fuwari-btn:hover {
+    background-color: var(--primary-fuwari-hover) !important;
+    box-shadow: 0 4px 14px var(--primary-fuwari) !important;
+  }
 }
 
 /* =========================================================
-   现有的样式与工具类 (完整保留)
+   原样式与工具类 (完整保留)
    ========================================================= */
 
 .scrollbar-none {
