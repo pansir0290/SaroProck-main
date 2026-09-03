@@ -58,7 +58,9 @@ if (q) {
     {
       posts.length > 0 ? (
         posts.map((post, index) => (
-          <FeedCard post={post} isLastItem={index === posts.length - 1} />
+          <div id={post.id} data-post-id={post.id} class="scroll-mt-20">
+            <FeedCard post={post} isLastItem={index === posts.length - 1} />
+          </div>
         ))
       ) : (
         <div class="text-center text-base-content/60 py-12">
@@ -75,9 +77,45 @@ if (q) {
           beforeCursor={beforeCursor}
           afterCursor={afterCursor}
           showBefore={showBefore}
-          showAfter={showAfter}
         />
       )
     }
   </TelegramLayout>
 </Layout>
+
+<script>
+  // 处理锚点 (#贴号) 的自动平滑滚动与高亮
+  function handleHashHighlight() {
+    const hash = window.location.hash;
+    if (!hash) return;
+
+    const targetId = hash.replace("#", "");
+    if (!targetId) return;
+
+    // 寻找带有对应 ID 的贴号 DOM 节点
+    const targetElement = 
+      document.getElementById(targetId) || 
+      document.querySelector(`[data-post-id="${targetId}"]`);
+
+    if (targetElement) {
+      // 1. 平滑滚动到屏幕中央
+      targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      // 2. 增加视觉高亮引导圈
+      targetElement.classList.add("ring-2", "ring-primary", "rounded-2xl", "transition-all", "duration-300");
+      setTimeout(() => {
+        targetElement.classList.remove("ring-2", "ring-primary");
+      }, 2500);
+    }
+  }
+
+  // 1. 页面加载完成时立刻触发一次检查
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", handleHashHighlight);
+  } else {
+    handleHashHighlight();
+  }
+
+  // 2. 监听 URL 哈希变动（如在同一页连续点击搜索结果）
+  window.addEventListener("hashchange", handleHashHighlight);
+</script>
