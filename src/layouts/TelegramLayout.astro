@@ -1,12 +1,7 @@
 ---
 // src/layouts/TelegramLayout.astro
-import ChannelProfile from "@components/telegram/ChannelProfile.astro";
-import { getChannelInfo } from "@/lib/telegram";
-
-const channelInfo = await getChannelInfo(Astro);
 ---
 
 <div class="space-y-6">
-  <!-- 已经删除了内部重复的标题与背景 Banner，仅保留子组件内容 -->
   <slot />
 </div>
