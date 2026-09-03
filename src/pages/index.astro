@@ -8,7 +8,7 @@ import { getChannelFeed } from "@/lib/telegram";
 const { searchParams } = Astro.url;
 const before = searchParams.get("before");
 const after = searchParams.get("after");
-const q = searchParams.get("q"); // 搜索参数
+const q = searchParams.get("q");
 
 const { posts } = await getChannelFeed(Astro, {
   before: before || undefined,
@@ -16,17 +16,12 @@ const { posts } = await getChannelFeed(Astro, {
   q: q || undefined,
 });
 
-const hasPosts = posts.length > 0;
-// "更早" 的光标是当前页面最后一条消息的 ID
+const hasPosts = posts && posts.length > 0;
 const beforeCursor = hasPosts ? posts[posts.length - 1].id : null;
-// "更新" 的光标是当前页面第一条消息的 ID
 const afterCursor = hasPosts ? posts[0].id : null;
 
-// 是否显示分页？(搜索时不显示)
 const showPagination = !q;
-// 是否显示 "更新" 按钮？(只有在非首页时才显示)
 const showAfter = showPagination && (!!before || !!after);
-// 是否显示 "更早" 按钮？
 const showBefore = showPagination;
 
 let infoMessage = "";
@@ -42,7 +37,7 @@ if (q) {
 <Layout title="首页">
   <div class="space-y-4">
     {
-      infoMessage && (
+      infoMessage ? (
         <div role="alert" class="alert rounded-xl text-sm mb-4">
           <i class="ri-information-line" />
           <span set:html={infoMessage} />
@@ -51,11 +46,11 @@ if (q) {
             返回最新
           </a>
         </div>
-      )
+      ) : null
     }
 
     {
-      posts.length > 0 ? (
+      hasPosts ? (
         posts.map((post, index) => (
           <FeedCard post={post} isLastItem={index === posts.length - 1} />
         ))
@@ -63,20 +58,20 @@ if (q) {
         <div class="text-center text-base-content/60 py-12">
           <i class="ri-compass-3-line text-4xl" />
           <p class="mt-4">没有找到任何动态。</p>
-          {q && <p class="text-xs mt-1">请尝试更换搜索关键词。</p>}
+          {q ? <p class="text-xs mt-1">请尝试更换搜索关键词。</p> : null}
         </div>
       )
     }
 
     {
-      showPagination && posts.length > 0 && (
+      showPagination && hasPosts ? (
         <Pagination
           beforeCursor={beforeCursor}
           afterCursor={afterCursor}
           showBefore={showBefore}
           showAfter={showAfter}
         />
-      )
+      ) : null
     }
   </div>
 </Layout>
