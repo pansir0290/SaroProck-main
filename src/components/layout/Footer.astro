@@ -10,65 +10,64 @@ const { author, twitterHandle, githubUrl, telegramUrl } = Astro.props;
 const currentYear = new Date().getFullYear();
 ---
 
-<footer class="w-full bg-base-200/50 border-t border-base-content/10 py-8 mt-12 no-print">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+<footer class="w-full bg-base-200/50 border-t border-base-content/10 py-6 mt-12 no-print">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
     
     <!-- 顶部赞赏与寄语区域 -->
-    <div class="space-y-3">
+    <div class="space-y-2">
       <p class="text-xs sm:text-sm text-base-content/70 leading-relaxed max-w-2xl">
         感谢你的停留至此，希望这里的文字能为你带来片刻的宁静或思考。
       </p>
-      <button class="btn btn-sm btn-outline rounded-full text-xs font-normal hover:bg-primary hover:border-primary">
+      <button class="btn btn-xs sm:btn-sm btn-outline rounded-full text-[11px] sm:text-xs font-normal hover:bg-primary hover:border-primary">
         <i class="ri-heart-3-line text-red-500"></i>
         喜欢本站
       </button>
     </div>
 
-    <!-- 核心调整区：探索、关注、二维码 强制三列横向并排 -->
-    <div class="grid grid-cols-3 gap-2 sm:gap-6 items-start pt-4 border-t border-base-content/5">
+    <!-- 核心调整区：Flex 弹性三列（手机与电脑一律横向三列并排） -->
+    <div class="flex flex-row items-start justify-between gap-2 sm:gap-6 pt-4 border-t border-base-content/5">
       
       <!-- 1. 探索栏目 -->
-      <div class="space-y-2">
+      <div class="flex-1 min-w-0 space-y-1.5">
         <h4 class="text-xs font-bold text-base-content/90 tracking-wider">探索</h4>
-        <ul class="space-y-1 text-xs text-base-content/70">
-          <li><a href="/posts" class="hover:text-primary transition-colors">动态</a></li>
-          <li><a href="/blog" class="hover:text-primary transition-colors">博客</a></li>
-          <li><a href="/drift" class="hover:text-primary transition-colors">漂流</a></li>
-          <li><a href="/projects" class="hover:text-primary transition-colors">仓库</a></li>
+        <ul class="space-y-1 text-[11px] sm:text-xs text-base-content/70">
+          <li><a href="/posts" class="hover:text-primary transition-colors block truncate">动态</a></li>
+          <li><a href="/blog" class="hover:text-primary transition-colors block truncate">博客</a></li>
+          <li><a href="/drift" class="hover:text-primary transition-colors block truncate">漂流</a></li>
+          <li><a href="/projects" class="hover:text-primary transition-colors block truncate">仓库</a></li>
         </ul>
       </div>
 
       <!-- 2. 关注栏目 -->
-      <div class="space-y-2">
+      <div class="flex-1 min-w-0 space-y-1.5">
         <h4 class="text-xs font-bold text-base-content/90 tracking-wider">关注</h4>
-        <ul class="space-y-1 text-xs text-base-content/70">
+        <ul class="space-y-1 text-[11px] sm:text-xs text-base-content/70">
           <li>
             <a href={`https://x.com/${twitterHandle.replace('@','')}`} target="_blank" rel="noreferrer" class="hover:text-primary transition-colors flex items-center gap-1 truncate">
-              <i class="ri-twitter-x-line text-xs"></i> X / Twitter
+              <i class="ri-twitter-x-line text-xs flex-shrink-0"></i> <span class="truncate">Twitter</span>
             </a>
           </li>
           <li>
             <a href={githubUrl} target="_blank" rel="noreferrer" class="hover:text-primary transition-colors flex items-center gap-1 truncate">
-              <i class="ri-github-line text-xs"></i> GitHub
+              <i class="ri-github-line text-xs flex-shrink-0"></i> <span class="truncate">GitHub</span>
             </a>
           </li>
           <li>
             <a href={telegramUrl} target="_blank" rel="noreferrer" class="hover:text-primary transition-colors flex items-center gap-1 truncate">
-              <i class="ri-telegram-line text-xs"></i> Telegram
+              <i class="ri-telegram-line text-xs flex-shrink-0"></i> <span class="truncate">Telegram</span>
             </a>
           </li>
           <li>
             <a href="/rss.xml" class="hover:text-primary transition-colors flex items-center gap-1 truncate">
-              <i class="ri-rss-line text-xs"></i> RSS
+              <i class="ri-rss-line text-xs flex-shrink-0"></i> <span class="truncate">RSS</span>
             </a>
           </li>
         </ul>
       </div>
 
-      <!-- 3. 二维码区域（缩小并居中/右对齐） -->
-      <div class="flex flex-col items-start sm:items-end justify-start space-y-1">
-        <div class="w-20 h-20 sm:w-24 sm:h-24 p-1 bg-white rounded-xl shadow-sm border border-base-content/10 overflow-hidden">
-          <!-- 替换为你的真实二维码图片路径，没有图片的话用下方 img 呈现 -->
+      <!-- 3. 二维码区域（手机端缩至 64px/16 宽高，精致不挤占空间） -->
+      <div class="flex-shrink-0 flex flex-col items-center justify-start space-y-1">
+        <div class="w-16 h-16 sm:w-20 sm:h-20 p-1 bg-white rounded-lg shadow-sm border border-base-content/10 overflow-hidden flex items-center justify-center">
           <img 
             src="/qrcode.png" 
             alt="Telegram QR Code" 
@@ -76,13 +75,13 @@ const currentYear = new Date().getFullYear();
             onerror="this.onerror=null; this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://t.me/pansir029';"
           />
         </div>
-        <span class="text-[10px] text-base-content/50 scale-90 origin-left sm:origin-right">扫码关注</span>
+        <span class="text-[9px] text-base-content/50 scale-90 whitespace-nowrap">扫码关注</span>
       </div>
 
     </div>
 
     <!-- 版权声明 -->
-    <div class="pt-4 border-t border-base-content/5 text-[11px] text-base-content/50 space-y-1">
+    <div class="pt-3 border-t border-base-content/5 text-[10px] sm:text-[11px] text-base-content/50 space-y-0.5">
       <p>© {currentYear} {author}. All rights reserved.</p>
       <p>用 Astro 构建，原作者 EveSunMaple</p>
     </div>
