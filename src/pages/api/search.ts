@@ -95,7 +95,12 @@ export const POST: APIRoute = async (context) => {
       
       const firstLine = cleanText.split("\n")[0] || "TG 动态";
       const title = firstLine.length > 30 ? `${firstLine.slice(0, 30)}...` : firstLine;
-      const targetUrl = post.id ? `/#${post.id}` : "/";
+      
+      // 生成带有 q 检索参数与 ID 锚点的完整 URL，确保跳转后主页可全量渲染并自动高亮平滑滚动
+      const encodedQuery = encodeURIComponent(rawKeywords.join(" "));
+      const targetUrl = post.id 
+        ? `/?q=${encodedQuery}#${post.id}` 
+        : `/?q=${encodedQuery}`;
 
       return {
         data: {
