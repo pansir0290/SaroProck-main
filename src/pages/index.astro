@@ -11,13 +11,13 @@ const before = searchParams.get("before");
 const after = searchParams.get("after");
 const q = searchParams.get("q");
 
-const { posts } = await getChannelFeed(Astro, {
+const { posts = [] } = (await getChannelFeed(Astro, {
   before: before || undefined,
   after: after || undefined,
   q: q || undefined,
-});
+})) || {};
 
-const hasPosts = posts.length > 0;
+const hasPosts = posts && posts.length > 0;
 const beforeCursor = hasPosts ? posts[posts.length - 1].id : null;
 const afterCursor = hasPosts ? posts[0].id : null;
 
@@ -51,7 +51,7 @@ if (q) {
     }
 
     {
-      posts.length > 0 ? (
+      hasPosts ? (
         posts.map((post, index) => (
           <FeedCard post={post} isLastItem={index === posts.length - 1} />
         ))
@@ -65,7 +65,7 @@ if (q) {
     }
 
     {
-      showPagination && posts.length > 0 && (
+      showPagination && hasPosts && (
         <Pagination
           beforeCursor={beforeCursor}
           afterCursor={afterCursor}
