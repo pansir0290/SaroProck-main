@@ -208,3 +208,9 @@ i.emoji {
 .katex-display {
   @apply overflow-x-auto;
 }
+/* 强制隐藏 Telegram 频道头部的大 Banner */
+.channel-profile-header, 
+.hero-banner,
+.telegram-header {
+  display: none !important;
+}
