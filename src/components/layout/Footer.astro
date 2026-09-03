@@ -80,11 +80,8 @@ const currentYear = new Date().getFullYear();
 
     </div>
 
-    <!-- 版权声明 -->
-    <div class="pt-3 border-t border-base-content/5 text-[10px] sm:text-[11px] text-base-content/50 space-y-0.5">
-      <p>© {currentYear} {author}. All rights reserved.</p>
-      <p>用 Astro 构建，原作者 EveSunMaple</p>
+    <!-- 版权声明（绝对居中） -->
+    <div class="pt-3 border-t border-base-content/5 text-[10px] sm:text-[11px] text-base-content/50 space-y-0.5 text-center flex flex-col items-center justify-center">
+      <p class="w-full text-center">© {currentYear} {author}. All rights reserved.</p>
+      <p class="w-full text-center">用 Astro 构建，原作者 EveSunMaple</p>
     </div>
-
-  </div>
-</footer>
