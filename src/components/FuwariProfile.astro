@@ -1,41 +1,29 @@
 ---
 // src/components/FuwariProfile.astro
 ---
-<div class="fuwari-card p-6 flex flex-col items-center text-center relative overflow-hidden">
-  <!-- 头像区 -->
-  <div class="relative mb-4 group">
-    <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-[var(--primary)] shadow-md transition-transform duration-300 group-hover:scale-105">
-      <img src="/avatar.png" alt="Avatar" class="w-full h-full object-cover" />
+<div class="fuwari-card p-5 flex flex-col items-center text-center relative overflow-hidden">
+  <!-- 头像区 (可自行修改头像路径) -->
+  <div class="relative mb-3 group">
+    <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-[var(--primary-fuwari)] shadow-sm transition-transform duration-300 group-hover:scale-105">
+      <img src="/avatar.png" alt="Avatar" class="w-full h-full object-cover" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=pansir'" />
     </div>
-    <span class="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full"></span>
+    <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-gray-800 rounded-full"></span>
   </div>
 
   <!-- 博主信息 -->
-  <h2 class="text-xl font-bold tracking-tight mb-1">pansir</h2>
-  <p class="text-sm text-[var(--text-sub)] mb-4">折腾不息 / 记录生活与技术</p>
-
-  <!-- 动态/数据统计统计项 -->
-  <div class="grid grid-cols-2 gap-2 w-full py-3 my-2 border-y border-[var(--card-border)] text-xs font-semibold">
-    <div class="flex flex-col">
-      <span class="text-[var(--text-sub)]">文章/动态</span>
-      <span class="text-base font-bold text-[var(--primary)]">100+</span>
-    </div>
-    <div class="flex flex-col border-l border-[var(--card-border)]">
-      <span class="text-[var(--text-sub)]">运行驱动</span>
-      <span class="text-base font-bold text-[var(--primary)]">Astro</span>
-    </div>
-  </div>
+  <h2 class="text-lg font-bold tracking-tight">pansir</h2>
+  <p class="text-xs text-base-content/60 mt-1">折腾不息 / 记录生活与技术</p>
 
   <!-- 社交快捷入口 -->
-  <div class="flex items-center space-x-3 mt-3">
-    <a href="https://github.com" target="_blank" class="p-2 rounded-lg bg-[var(--bg-main)] text-[var(--text-sub)] hover:text-[var(--primary)] hover:scale-110 transition-all">
-      <i class="ri-github-line text-lg"></i>
+  <div class="flex items-center space-x-3 mt-4">
+    <a href="https://github.com/pansir0290" target="_blank" class="p-2 rounded-lg bg-base-200/50 hover:text-[var(--primary-fuwari)] transition-all">
+      <i class="ri-github-line text-base"></i>
     </a>
-    <a href="https://t.me" target="_blank" class="p-2 rounded-lg bg-[var(--bg-main)] text-[var(--text-sub)] hover:text-[var(--primary)] hover:scale-110 transition-all">
-      <i class="ri-telegram-line text-lg"></i>
+    <a href="https://t.me/pansir029" target="_blank" class="p-2 rounded-lg bg-base-200/50 hover:text-[var(--primary-fuwari)] transition-all">
+      <i class="ri-telegram-line text-base"></i>
     </a>
-    <a href="/rss.xml" class="p-2 rounded-lg bg-[var(--bg-main)] text-[var(--text-sub)] hover:text-[var(--primary)] hover:scale-110 transition-all">
-      <i class="ri-rss-line text-lg"></i>
+    <a href="/rss.xml" class="p-2 rounded-lg bg-base-200/50 hover:text-[var(--primary-fuwari)] transition-all">
+      <i class="ri-rss-line text-base"></i>
     </a>
   </div>
 </div>
