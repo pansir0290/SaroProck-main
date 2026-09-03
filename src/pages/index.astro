@@ -9,20 +9,25 @@ import { getChannelFeed } from "@/lib/telegram";
 const { searchParams } = Astro.url;
 const before = searchParams.get("before");
 const after = searchParams.get("after");
-const q = searchParams.get("q");
+const q = searchParams.get("q"); // 搜索参数
 
-const { posts = [] } = (await getChannelFeed(Astro, {
+const { posts } = await getChannelFeed(Astro, {
   before: before || undefined,
   after: after || undefined,
   q: q || undefined,
-})) || {};
+});
 
-const hasPosts = posts && posts.length > 0;
+const hasPosts = posts.length > 0;
+// "更早" 的光标是当前页面最后一条消息的 ID
 const beforeCursor = hasPosts ? posts[posts.length - 1].id : null;
+// "更新" 的光标是当前页面第一条消息的 ID
 const afterCursor = hasPosts ? posts[0].id : null;
 
+// 是否显示分页？(搜索时不显示)
 const showPagination = !q;
+// 是否显示 "更新" 按钮？(只有在非首页时才显示)
 const showAfter = showPagination && (!!before || !!after);
+// 是否显示 "更早" 按钮？
 const showBefore = showPagination;
 
 let infoMessage = "";
@@ -51,7 +56,7 @@ if (q) {
     }
 
     {
-      hasPosts ? (
+      posts.length > 0 ? (
         posts.map((post, index) => (
           <FeedCard post={post} isLastItem={index === posts.length - 1} />
         ))
@@ -65,7 +70,7 @@ if (q) {
     }
 
     {
-      showPagination && hasPosts && (
+      showPagination && posts.length > 0 && (
         <Pagination
           beforeCursor={beforeCursor}
           afterCursor={afterCursor}
