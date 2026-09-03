@@ -11,9 +11,9 @@ export interface Props {
   headings?: MarkdownHeading[];
 }
 
-const { headings, author, twitterHandle, githubUrl, telegramUrl } = Astro.props;
+const { headings } = Astro.props;
 
-// 动态统计数据
+// 动态统计数据逻辑
 const allPosts = await getCollection("blog", ({ data }) => data.draft !== true);
 const countWords = (text: string) => {
   text = text.replace(/[\u3000-\u303F\uFF00-\uFFEF]/g, "");
@@ -39,150 +39,86 @@ const EMAIL_ADDRESS = "pansir029@gmail.com";
 ---
 
 <aside class="lg:col-span-1 no-print">
-  <div class="sticky top-20 space-y-4">
-    <!-- 保留原本一体化的经典卡片 -->
-    <div
-      class="bg-base-200/40 backdrop-blur-md rounded-2xl p-4 border border-base-content/10 shadow-sm space-y-4"
-    >
-      <!-- 个人信息 -->
-      <div>
-        <div class="flex items-center space-x-3 mb-3">
-          <div class="avatar">
-            <div
-              class="w-10 h-10 rounded-full ring-1 ring-primary/20 ring-offset-1 ring-offset-base-100 overflow-hidden"
-            >
-              <img src="/avatar.png" alt="Avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=pansir'" />
-            </div>
-          </div>
-          <div>
-            <h3 class="font-semibold text-sm">{author}</h3>
-            <p class="font-medium text-base-content/70 text-xs">闷骚宅男</p>
-          </div>
-        </div>
-        <p class="text-base-content/70 text-xs mb-3 leading-relaxed">
-          热爱技术，喜欢记录生活中的点点滴滴。
-        </p>
-        <div class="flex items-center gap-x-1">
-          <a
-            href={`https://twitter.com/${twitterHandle.replace("@", "")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="btn btn-ghost btn-sm btn-circle"
-            aria-label="访问我的 Twitter"
-          >
-            <i class="ri-twitter-line text-lg"></i>
-          </a>
-          <a
-            href={githubUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="btn btn-ghost btn-sm btn-circle"
-            aria-label="访问我的 GitHub"
-          >
-            <i class="ri-github-line text-lg"></i>
-          </a>
-          <a
-            href={telegramUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="btn btn-ghost btn-sm btn-circle"
-            aria-label="访问我的 Telegram"
-          >
-            <i class="ri-telegram-line text-lg"></i>
-          </a>
-        </div>
-      </div>
-
-      <div class="divider my-2"></div>
-
-      <!-- 我的频道 -->
-      <div>
-        <h4 class="text-xs font-semibold uppercase text-base-content/70 mb-2">
-          我的频道
-        </h4>
-        <div
-          class="relative flex items-center bg-base-100 rounded-lg p-2 border border-base-content/10"
-        >
-          <i class="ri-telegram-fill text-base-content/70 ml-1 mr-2"></i>
-          <span
-            id="telegram-channel-link"
-            class="text-sm font-mono text-base-content/80 select-all"
-            >@allfree123</span
-          >
-          <button
-            id="copy-channel-btn"
-            type="button"
-            class="btn btn-ghost btn-sm btn-circle absolute right-1"
-            aria-label="复制频道地址"
-          >
-            <i class="ri-file-copy-fill copy-icon"></i>
-            <i class="ri-check-line success-icon hidden text-emerald-500"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 文章目录 或 站点统计与联系方式 -->
+  <!-- sticky top-20 实现滚动悬浮 -->
+  <div class="sticky top-20">
     {
       headings && headings.length > 0 ? (
         <TOC headings={headings} />
       ) : (
-        <>
-          <div class="bg-base-200/40 backdrop-blur-md rounded-2xl p-5 border border-base-content/10 shadow-sm">
-            <h3 class="font-semibold text-base mb-5 flex items-center">
-              <i class="ri-bar-chart-fill text-primary mr-2" />
+        /* 聚合在一起的超紧凑悬浮卡片 */
+        <div class="bg-base-200/50 backdrop-blur-md rounded-2xl p-4 border border-base-content/10 shadow-lg hover:shadow-xl transition-shadow duration-300 space-y-4">
+          
+          <!-- 1. 我的频道 -->
+          <div>
+            <div class="text-xs font-semibold uppercase text-base-content/60 mb-2 flex items-center">
+              <i class="ri-telegram-line mr-1.5 text-primary text-sm"></i>
+              我的频道
+            </div>
+            <div class="relative flex items-center bg-base-100/80 rounded-xl p-2 border border-base-content/10">
+              <i class="ri-telegram-fill text-primary ml-1 mr-2 text-base"></i>
+              <span id="telegram-channel-link" class="text-xs font-mono text-base-content/80 select-all">
+                @allfree123
+              </span>
+              <button
+                id="copy-channel-btn"
+                type="button"
+                class="btn btn-ghost btn-xs btn-circle absolute right-1 hover:text-primary"
+                aria-label="复制频道地址"
+              >
+                <i class="ri-file-copy-fill copy-icon"></i>
+                <i class="ri-check-line success-icon hidden text-emerald-500"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="border-t border-base-content/10"></div>
+
+          <!-- 2. 站点统计 -->
+          <div>
+            <div class="text-xs font-semibold uppercase text-base-content/60 mb-2.5 flex items-center">
+              <i class="ri-bar-chart-box-line mr-1.5 text-primary text-sm"></i>
               站点统计
-            </h3>
-            <div class="space-y-5">
-              <div class="flex items-center gap-4">
-                <div class="w-12 text-center">
-                  <i class="ri-article-line text-4xl text-primary/70" />
-                </div>
-                <div>
-                  <p class="text-2xl font-semibold leading-tight">
-                    {stats.articles}
-                  </p>
-                  <p class="text-sm text-base-content/70">篇文章</p>
-                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-center">
+              <div class="bg-base-100/60 rounded-xl p-2 border border-base-content/5">
+                <p class="text-lg font-bold leading-tight text-base-content/90">{stats.articles}</p>
+                <p class="text-[10px] text-base-content/60 mt-0.5">篇文章</p>
               </div>
-              <div class="flex items-center gap-4">
-                <div class="w-12 text-center">
-                  <i class="ri-file-word-2-line text-4xl text-primary/70" />
-                </div>
-                <div>
-                  <p class="text-2xl font-semibold leading-tight">
-                    {stats.words}
-                  </p>
-                  <p class="text-sm text-base-content/70">总字数</p>
-                </div>
+              <div class="bg-base-100/60 rounded-xl p-2 border border-base-content/5">
+                <p class="text-lg font-bold leading-tight text-base-content/90">{stats.words}</p>
+                <p class="text-[10px] text-base-content/60 mt-0.5">总字数</p>
               </div>
             </div>
           </div>
-          
-          <div class="bg-base-200/40 backdrop-blur-md rounded-2xl p-4 border border-base-content/10 shadow-sm">
-            <h3 class="font-semibold text-base mb-4 flex items-center">
-              <i class="ri-contacts-book-line text-primary mr-2" />
+
+          <div class="border-t border-base-content/10"></div>
+
+          <!-- 3. 联系方式 -->
+          <div>
+            <div class="text-xs font-semibold uppercase text-base-content/60 mb-2.5 flex items-center">
+              <i class="ri-contacts-line mr-1.5 text-primary text-sm"></i>
               联系方式
-            </h3>
-            <div class="space-y-2">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
               <button
                 id="copy-qq-btn"
-                class="btn btn-sm btn-outline w-full rounded-lg"
+                class="btn btn-xs btn-outline rounded-lg font-normal border-base-content/20 hover:border-primary hover:bg-primary hover:text-primary-content"
                 data-qq-number={QQ_GROUP_NUMBER}
               >
-                <i class="ri-qq-line" />
-                复制QQ号
+                <i class="ri-qq-line"></i>
+                复制QQ
               </button>
               <a
                 href={`mailto:${EMAIL_ADDRESS}`}
-                class="btn btn-sm btn-outline w-full rounded-lg"
+                class="btn btn-xs btn-outline rounded-lg font-normal border-base-content/20 hover:border-primary hover:bg-primary hover:text-primary-content"
               >
-                <i class="ri-mail-send-line" />
-                发送邮件
+                <i class="ri-mail-send-line"></i>
+                发邮件
               </a>
             </div>
           </div>
-        </>
+
+        </div>
       )
     }
   </div>
@@ -201,7 +137,7 @@ const EMAIL_ADDRESS = "pansir029@gmail.com";
         const textToCopy = channelLinkElement.textContent;
         if (!textToCopy || !copyIcon || !successIcon) return;
         try {
-          await navigator.clipboard.writeText(textToCopy);
+          await navigator.clipboard.writeText(textToCopy.trim());
           copyIcon.classList.add("hidden");
           successIcon.classList.remove("hidden");
           setTimeout(() => {
@@ -224,7 +160,7 @@ const EMAIL_ADDRESS = "pansir029@gmail.com";
         navigator.clipboard
           .writeText(QQ_GROUP_NUMBER)
           .then(() => {
-            copyQqBtn.innerHTML = '<i class="ri-check-line"></i> 复制成功';
+            copyQqBtn.innerHTML = '<i class="ri-check-line"></i> 成功';
             copyQqBtn.classList.add("btn-success");
             setTimeout(() => {
               copyQqBtn.innerHTML = originalText;
@@ -232,12 +168,12 @@ const EMAIL_ADDRESS = "pansir029@gmail.com";
             }, 2000);
           })
           .catch((err) => {
-            console.error("无法复制QQ群号: ", err);
-            copyQqBtn.innerHTML = '<i class="ri-close-line"></i> 复制失败';
-            copyQqBtn.classList.add("btn-error", "text-error-content");
+            console.error("无法复制QQ号: ", err);
+            copyQqBtn.innerHTML = '<i class="ri-close-line"></i> 失败';
+            copyQqBtn.classList.add("btn-error");
             setTimeout(() => {
               copyQqBtn.innerHTML = originalText;
-              copyQqBtn.classList.remove("btn-error", "text-error-content");
+              copyQqBtn.classList.remove("btn-error");
             }, 2000);
           });
       });
