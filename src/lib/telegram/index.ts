@@ -1,6 +1,5 @@
 import type { AstroGlobal } from "astro";
 import type { ChannelInfo, TelegramPost } from "@/types";
-// src/lib/telegram/index.ts
 import * as cheerio from "cheerio";
 import { fetchTelegramHtml } from "./api";
 import { parsePost } from "./parser";
@@ -10,7 +9,7 @@ function getEnv(Astro: any, name: string): string | undefined {
 }
 
 /**
- * 获取频道信息和动态列表
+ * 获取频道信息和动态列表（支持全量历史搜索参数 q）
  */
 export async function getChannelFeed(
   Astro: AstroGlobal,
