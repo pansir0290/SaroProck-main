@@ -1,5 +1,5 @@
 ---
-import SearchModal from "../widgets/SearchModal.astro";
+import SearchBar from "../widgets/SearchBar.astro";
 
 export interface Props {
   siteTitle: string;
@@ -14,21 +14,24 @@ const SITE_DESCRIPTION = "一些随性的记录和不成熟的想法，漂浮在
     
     <!-- 左侧：Logo + 主标题 + 紧跟后边的副标题（同一行横排） -->
     <a href="/" class="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1 hover:opacity-80 transition-opacity">
+      <!-- 枫叶 Logo -->
       <i class="ri-leaf-fill text-primary text-xl flex-shrink-0"></i>
 
+      <!-- 标题 + 小字跟在后边 -->
       <div class="flex items-baseline gap-2 min-w-0 truncate">
         <span class="text-xs sm:text-sm font-bold tracking-tight text-base-content flex-shrink-0">
           {siteTitle}
         </span>
+        <!-- 后边紧跟的小字（副标题） -->
         <span class="text-[10px] sm:text-xs text-base-content/50 font-light truncate">
           {SITE_DESCRIPTION}
         </span>
       </div>
     </a>
 
-    <!-- 右侧：搜索组件 -->
+    <!-- 右侧：挂载真正的搜索组件 -->
     <div class="flex items-center flex-shrink-0">
-      <SearchModal />
+      <SearchBar />
     </div>
 
   </div>
