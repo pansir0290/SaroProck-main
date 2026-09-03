@@ -9,7 +9,7 @@ import { getChannelFeed } from "@/lib/telegram";
 const { searchParams } = Astro.url;
 const before = searchParams.get("before");
 const after = searchParams.get("after");
-const q = searchParams.get("q"); // 同时考虑搜索的情况
+const q = searchParams.get("q"); // 搜索参数
 
 const { posts } = await getChannelFeed(Astro, {
   before: before || undefined,
@@ -27,7 +27,7 @@ const afterCursor = hasPosts ? posts[0].id : null;
 const showPagination = !q;
 // 是否显示 "更新" 按钮？(只有在非首页时才显示)
 const showAfter = showPagination && (!!before || !!after);
-// 是否显示 "更早" 按钮？(理论上总是显示，除非没有更多数据，这里我们先默认显示)
+// 是否显示 "更早" 按钮？
 const showBefore = showPagination;
 
 let infoMessage = "";
@@ -44,7 +44,7 @@ if (q) {
   <TelegramLayout>
     {
       infoMessage && (
-        <div role="alert" class="alert rounded-xl text-sm">
+        <div role="alert" class="alert rounded-xl text-sm mb-4">
           <i class="ri-information-line" />
           <span set:html={infoMessage} />
           <a href="/" class="btn btn-ghost btn-sm ml-auto">
@@ -61,10 +61,10 @@ if (q) {
           <FeedCard post={post} isLastItem={index === posts.length - 1} />
         ))
       ) : (
-        <div class="text-center text-base-content/60">
+        <div class="text-center text-base-content/60 py-12">
           <i class="ri-compass-3-line text-4xl" />
           <p class="mt-4">没有找到任何动态。</p>
-          {q && <p>请尝试更换搜索关键词。</p>}
+          {q && <p class="text-xs mt-1">请尝试更换搜索关键词。</p>}
         </div>
       )
     }
