@@ -33,7 +33,8 @@ const {
   description = SITE_DESCRIPTION,
   image = OG_IMAGE_DEFAULT,
   headings = [],
-  showHero = title === "首页",
+  // 如果不需要首页顶部大 Banner 挤占空间，可改为 showHero = false
+  showHero = false, 
 } = Astro.props;
 
 const finalTitle = title === "首页" ? SITE_TITLE : `${title} | ${SITE_TITLE}`;
@@ -86,15 +87,16 @@ const socialImageURL = new URL(image, Astro.site);
 
     {showHero && <Hero siteDescription={SITE_DESCRIPTION} />}
 
-    <!-- Fuwari 经典的双栏卡片响应式容器 -->
+    <!-- Fuwari 双栏容器 -->
     <div
       id="main-content-grid"
-      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6"
     >
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        <!-- 侧边栏：放置 FuwariProfile 个人名片与原有侧栏挂件 -->
-        <aside class="lg:col-span-1 space-y-6 lg:sticky lg:top-20">
+        <!-- 侧边栏：取消重复区域，仅保留顶部单个 FuwariProfile 与必选部件 -->
+        <aside class="lg:col-span-1 space-y-4 lg:sticky lg:top-20">
           <FuwariProfile />
+          
           <Sidebar
             headings={headings}
             author={SITE_AUTHOR}
@@ -104,7 +106,7 @@ const socialImageURL = new URL(image, Astro.site);
           />
         </aside>
 
-        <!-- 主内容区：放置动态流/博客正文 (占 3 列) -->
+        <!-- 主内容区 -->
         <main class="lg:col-span-3 min-h-[60vh] space-y-6">
           <slot />
         </main>
