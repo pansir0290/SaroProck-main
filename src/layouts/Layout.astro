@@ -6,13 +6,12 @@ import "remixicon/fonts/remixicon.css";
 
 import type { MarkdownHeading } from "astro";
 import Header from "@components/layout/Header.astro";
-import Hero from "@components/layout/Hero.astro";
 import Sidebar from "@components/layout/Sidebar.astro";
 import Footer from "@components/layout/Footer.astro";
 import BackToTop from "@components/widgets/BackToTop.astro";
 
 const SITE_TITLE = "サンpansir的随笔";
-const SITE_DESCRIPTION = "一个孤独的地方，散落着一个人的人生碎片";
+const SITE_DESCRIPTION = "一些随性的记录和不成熟的想法，漂浮在时间的河流里";
 const SITE_AUTHOR = "pansir029";
 const OG_IMAGE_DEFAULT = "/default-social-image.png";
 const TWITTER_HANDLE = "@pansir029";
@@ -32,7 +31,7 @@ const {
   description = SITE_DESCRIPTION,
   image = OG_IMAGE_DEFAULT,
   headings = [],
-  showHero = false, 
+  showHero = true, // 默认开启顶部大标语区域
 } = Astro.props;
 
 const finalTitle = title === "首页" ? SITE_TITLE : `${title} | ${SITE_TITLE}`;
@@ -81,17 +80,37 @@ const socialImageURL = new URL(image, Astro.site);
     <meta name="twitter:image" content={socialImageURL} />
   </head>
   <body class="bg-base-100 text-base-content min-h-screen topography">
+    <!-- 1. 顶部导航栏 -->
     <Header siteTitle={SITE_TITLE} />
 
-    {showHero && <Hero siteDescription={SITE_DESCRIPTION} />}
+    <!-- 2. 版面最顶部的视觉区域：展示标题与副标题 -->
+    {
+      showHero && (
+        <section class="w-full bg-base-200/30 border-b border-base-content/5 py-10 px-4 sm:px-6 lg:px-8 mb-6 backdrop-blur-sm">
+          <div class="max-w-7xl mx-auto text-center space-y-2">
+            <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-base-content">
+              {SITE_TITLE}
+            </h1>
+            <p class="text-sm sm:text-base text-base-content/70 font-light max-w-2xl mx-auto">
+              {SITE_DESCRIPTION}
+            </p>
+          </div>
+        </section>
+      )
+    }
 
-    <!-- 主容器 -->
+    <!-- 3. 双栏主体内容网格 -->
     <div
       id="main-content-grid"
-      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6"
+      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12"
     >
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        <!-- 侧边栏：恢复单卡片结构，直接挂载 Sidebar -->
+        <!-- 主内容区（占据左侧 3 列为主视觉区） -->
+        <main class="lg:col-span-3 min-h-[60vh] space-y-6">
+          <slot />
+        </main>
+
+        <!-- 侧边栏（占据右侧 1 列，悬浮紧凑排列） -->
         <Sidebar
           headings={headings}
           author={SITE_AUTHOR}
@@ -99,14 +118,10 @@ const socialImageURL = new URL(image, Astro.site);
           githubUrl={GITHUB_URL}
           telegramUrl={TELEGRAM_URL}
         />
-
-        <!-- 主内容区 -->
-        <main class="lg:col-span-3 min-h-[60vh] space-y-6">
-          <slot />
-        </main>
       </div>
     </div>
 
+    <!-- 4. 页脚与常用工具 -->
     <Footer
       author={SITE_AUTHOR}
       twitterHandle={TWITTER_HANDLE}
@@ -115,18 +130,15 @@ const socialImageURL = new URL(image, Astro.site);
     />
 
     <BackToTop />
+
     <script is:inline>
       document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll(".btn-copy").forEach((button) => {
           button.addEventListener("click", async () => {
             const codeBlock = button.closest(".saro-code");
             const code = codeBlock.querySelector("code").textContent;
-            const copyIcon = button.querySelector(
-              ".saro-code-toolbar-copy-icon",
-            );
-            const successIcon = button.querySelector(
-              ".saro-code-toolbar-copy-success",
-            );
+            const copyIcon = button.querySelector(".saro-code-toolbar-copy-icon");
+            const successIcon = button.querySelector(".saro-code-toolbar-copy-success");
             try {
               await navigator.clipboard.writeText(code);
               copyIcon.classList.add("hidden");
