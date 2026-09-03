@@ -8,39 +8,35 @@ const SITE_DESCRIPTION = "一些随性的记录和不成熟的想法，漂浮在
 ---
 
 <header class="sticky top-0 z-50 w-full bg-base-100/80 backdrop-blur-md border-b border-base-content/10 no-print">
-  <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-2 sm:gap-4">
+  <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-2">
     
-    <!-- 左侧：Logo (枫叶) + 缩小版标题与副标题 -->
-    <a href="/" class="flex items-center gap-2 min-w-0 flex-shrink hover:opacity-80 transition-opacity">
+    <!-- 左侧：Logo + 主标题 + 紧跟后边的副标题（同一行横排） -->
+    <a href="/" class="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1 hover:opacity-80 transition-opacity">
       <!-- 枫叶 Logo -->
-      <div class="text-primary text-xl sm:text-2xl flex-shrink-0 flex items-center">
-        <i class="ri-leaf-fill"></i>
-      </div>
+      <i class="ri-leaf-fill text-primary text-xl flex-shrink-0"></i>
 
-      <!-- 站点标题与副标题 (上下排列，紧凑放开) -->
-      <div class="flex flex-col min-w-0 justify-center">
-        <span class="text-xs sm:text-sm font-bold tracking-tight text-base-content truncate leading-tight">
+      <!-- 标题 + 小字跟在后边 -->
+      <div class="flex items-baseline gap-2 min-w-0 truncate">
+        <span class="text-xs sm:text-sm font-bold tracking-tight text-base-content flex-shrink-0">
           {siteTitle}
         </span>
-        <span class="text-[9px] sm:text-[10px] text-base-content/60 truncate leading-tight font-light hidden xs:block sm:block">
+        <!-- 后边紧跟的小字（副标题） -->
+        <span class="text-[10px] sm:text-xs text-base-content/50 font-light truncate">
           {SITE_DESCRIPTION}
         </span>
       </div>
     </a>
 
-    <!-- 右侧：搜索框 (适度缩小) 与功能按键 -->
-    <div class="flex items-center gap-2 flex-shrink-0">
-      <!-- 缩小版搜索框 -->
+    <!-- 右侧：精简搜索框 -->
+    <div class="flex items-center flex-shrink-0">
       <div class="relative flex items-center">
         <input
           type="text"
           placeholder="搜索..."
-          class="w-24 xs:w-32 sm:w-40 h-8 pl-7 pr-2 text-xs rounded-full bg-base-200/60 border border-base-content/10 focus:outline-none focus:border-primary focus:w-36 sm:focus:w-52 transition-all duration-300"
+          class="w-20 xs:w-28 sm:w-36 h-7 text-[11px] sm:text-xs pl-6 pr-2 rounded-full bg-base-200/60 border border-base-content/10 focus:outline-none focus:border-primary focus:w-32 sm:focus:w-48 transition-all duration-300"
         />
-        <i class="ri-search-line absolute left-2.5 text-xs text-base-content/50"></i>
+        <i class="ri-search-line absolute left-2 text-xs text-base-content/40"></i>
       </div>
-
-      <!-- 如果你有主题切换或菜单按钮，会在这里跟随 -->
     </div>
 
   </div>
