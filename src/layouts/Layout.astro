@@ -31,7 +31,7 @@ const {
   description = SITE_DESCRIPTION,
   image = OG_IMAGE_DEFAULT,
   headings = [],
-  showHero = true, // 默认开启顶部大标语区域
+  showHero = false, // 默认开启顶部大标语区域
 } = Astro.props;
 
 const finalTitle = title === "首页" ? SITE_TITLE : `${title} | ${SITE_TITLE}`;
