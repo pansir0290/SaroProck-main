@@ -1,36 +1,47 @@
 ---
-import "/node_modules/katex/dist/katex.min.css";
-import SearchBar from "@components/widgets/SearchBar.astro"; // 1. 引入搜索组件
-
 export interface Props {
   siteTitle: string;
 }
+
 const { siteTitle } = Astro.props;
+const SITE_DESCRIPTION = "一些随性的记录和不成熟的想法，漂浮在时间的河流里";
 ---
 
-<header
-  class="sticky top-0 z-50 backdrop-blur-md bg-base-100/90 border-b border-base-content/10 no-print"
->
-  <div class="max-w-6xl mx-auto px-4 sm:px-6">
-    <div class="flex items-center justify-between h-14">
-      <div class="flex items-center space-x-3">
-        <a href="/" class="flex items-center space-x-2 group">
-          <div
-            class="w-7 h-7 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
-          >
-            <i class="ri-leaf-line text-primary-content text-sm"></i>
-          </div>
-          <span
-            class="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent hidden md:block"
-          >
-            {siteTitle}
-          </span>
-        </a>
+<header class="sticky top-0 z-50 w-full bg-base-100/80 backdrop-blur-md border-b border-base-content/10 no-print">
+  <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-2 sm:gap-4">
+    
+    <!-- 左侧：Logo (枫叶) + 缩小版标题与副标题 -->
+    <a href="/" class="flex items-center gap-2 min-w-0 flex-shrink hover:opacity-80 transition-opacity">
+      <!-- 枫叶 Logo -->
+      <div class="text-primary text-xl sm:text-2xl flex-shrink-0 flex items-center">
+        <i class="ri-leaf-fill"></i>
       </div>
 
-      <div class="flex items-center">
-        <SearchBar />
+      <!-- 站点标题与副标题 (上下排列，紧凑放开) -->
+      <div class="flex flex-col min-w-0 justify-center">
+        <span class="text-xs sm:text-sm font-bold tracking-tight text-base-content truncate leading-tight">
+          {siteTitle}
+        </span>
+        <span class="text-[9px] sm:text-[10px] text-base-content/60 truncate leading-tight font-light hidden xs:block sm:block">
+          {SITE_DESCRIPTION}
+        </span>
       </div>
+    </a>
+
+    <!-- 右侧：搜索框 (适度缩小) 与功能按键 -->
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <!-- 缩小版搜索框 -->
+      <div class="relative flex items-center">
+        <input
+          type="text"
+          placeholder="搜索..."
+          class="w-24 xs:w-32 sm:w-40 h-8 pl-7 pr-2 text-xs rounded-full bg-base-200/60 border border-base-content/10 focus:outline-none focus:border-primary focus:w-36 sm:focus:w-52 transition-all duration-300"
+        />
+        <i class="ri-search-line absolute left-2.5 text-xs text-base-content/50"></i>
+      </div>
+
+      <!-- 如果你有主题切换或菜单按钮，会在这里跟随 -->
     </div>
+
   </div>
 </header>
