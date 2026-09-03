@@ -1,7 +1,8 @@
 ---
+// src/components/layout/Sidebar.astro
 import type { MarkdownHeading } from "astro";
-import { getCollection } from "astro:content";
 import TOC from "@components/blog/TOC.astro";
+import { getChannelFeed } from "@/lib/telegram";
 
 export interface Props {
   author: string;
@@ -13,9 +14,18 @@ export interface Props {
 
 const { headings, author, twitterHandle, githubUrl, telegramUrl } = Astro.props;
 
-// 动态统计数据 (无改动)
-const allPosts = await getCollection("blog", ({ data }) => data.draft !== true);
+// 1. 仅获取 Telegram 频道动态数据
+let tgPosts: any[] = [];
+try {
+  const tgFeed = await getChannelFeed(Astro, {});
+  tgPosts = tgFeed?.posts || (Array.isArray(tgFeed) ? tgFeed : []);
+} catch (e) {
+  console.error("Sidebar TG Stats Fetch Error:", e);
+}
+
+// 精准统计中英文字数
 const countWords = (text: string) => {
+  if (!text) return 0;
   text = text.replace(/[\u3000-\u303F\uFF00-\uFFEF]/g, "");
   text = text.replace(/[`*~_#+\-!\[\]{}()>|]/g, "");
   const cjkChars = text.match(/[\u4e00-\u9fa5]/g)?.length || 0;
@@ -23,14 +33,19 @@ const countWords = (text: string) => {
     text.replace(/[\u4e00-\u9fa5]/g, " ").match(/\b\w+\b/g)?.length || 0;
   return cjkChars + otherWords;
 };
-const totalWords = allPosts.reduce(
-  (acc, post) => acc + countWords(post.body),
-  0,
-);
+
+// 仅汇总 TG 动态的字数
+const tgTotalWords = tgPosts.reduce((acc, post) => {
+  const content = post.content || post.text || post.message || post.body || "";
+  return acc + countWords(String(content));
+}, 0);
+
 const formattedTotalWords =
-  totalWords > 1000 ? `${(totalWords / 1000).toFixed(1)}k` : totalWords;
+  tgTotalWords >= 1000 ? `${(tgTotalWords / 1000).toFixed(1)}k` : `${tgTotalWords}`;
+
+// 仅展示 Telegram 统计结果
 const stats = {
-  articles: allPosts.length,
+  articles: tgPosts.length,
   words: formattedTotalWords,
 };
 
@@ -88,9 +103,6 @@ const EMAIL_ADDRESS = "pansir029@gmail.com";
           >
             <i class="ri-telegram-line text-lg"></i>
           </a>
-
-
-
         </div>
       </div>
 
@@ -130,18 +142,18 @@ const EMAIL_ADDRESS = "pansir029@gmail.com";
           <div class="bg-base-200/40 backdrop-blur-sm rounded-xl p-5 border border-base-content/5">
             <h3 class="font-semibold text-base mb-5 flex items-center">
               <i class="ri-bar-chart-fill text-primary mr-2" />
-              站点统计
+              动态统计
             </h3>
             <div class="space-y-5">
               <div class="flex items-center gap-4">
                 <div class="w-12 text-center">
-                  <i class="ri-article-line text-4xl text-primary/70" />
+                  <i class="ri-telegram-line text-4xl text-primary/70" />
                 </div>
                 <div>
                   <p class="text-2xl font-semibold leading-tight">
                     {stats.articles}
                   </p>
-                  <p class="text-sm text-base-content/70">篇文章</p>
+                  <p class="text-sm text-base-content/70">条动态</p>
                 </div>
               </div>
               <div class="flex items-center gap-4">
