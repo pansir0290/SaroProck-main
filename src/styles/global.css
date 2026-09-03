@@ -208,9 +208,18 @@ i.emoji {
 .katex-display {
   @apply overflow-x-auto;
 }
-/* 强制隐藏 Telegram 频道头部的大 Banner */
-.channel-profile-header, 
-.hero-banner,
-.telegram-header {
+/* 彻底隐藏包含等高线背景/大标题的 Hero 区域 */
+header + section,
+.topography,
+[class*="topography"],
+div[class*="bg-base-200"]:has(h1),
+div:has(> h1:contains("サンpansir")) {
+  display: none !important;
+}
+
+/* 强制隐藏页面主体内所有的 h1 大标题 */
+main h1,
+.lg\:col-span-3 > h1,
+.lg\:col-span-3 > div:first-child:has(h1) {
   display: none !important;
 }
