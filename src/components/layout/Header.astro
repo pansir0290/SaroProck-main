@@ -1,4 +1,6 @@
 ---
+import SearchModal from "@components/widgets/SearchModal.astro";
+
 export interface Props {
   siteTitle: string;
 }
@@ -27,16 +29,9 @@ const SITE_DESCRIPTION = "一些随性的记录和不成熟的想法，漂浮在
       </div>
     </a>
 
-    <!-- 右侧：精简搜索框 -->
+    <!-- 右侧：挂载真正的搜索组件 -->
     <div class="flex items-center flex-shrink-0">
-      <div class="relative flex items-center">
-        <input
-          type="text"
-          placeholder="搜索..."
-          class="w-20 xs:w-28 sm:w-36 h-7 text-[11px] sm:text-xs pl-6 pr-2 rounded-full bg-base-200/60 border border-base-content/10 focus:outline-none focus:border-primary focus:w-32 sm:focus:w-48 transition-all duration-300"
-        />
-        <i class="ri-search-line absolute left-2 text-xs text-base-content/40"></i>
-      </div>
+      <SearchModal />
     </div>
 
   </div>
