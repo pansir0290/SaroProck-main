@@ -31,7 +31,6 @@ const {
   description = SITE_DESCRIPTION,
   image = OG_IMAGE_DEFAULT,
   headings = [],
-  showHero = false, // 默认开启顶部大标语区域
 } = Astro.props;
 
 const finalTitle = title === "首页" ? SITE_TITLE : `${title} | ${SITE_TITLE}`;
@@ -80,29 +79,13 @@ const socialImageURL = new URL(image, Astro.site);
     <meta name="twitter:image" content={socialImageURL} />
   </head>
   <body class="bg-base-100 text-base-content min-h-screen topography">
-    <!-- 1. 顶部导航栏 -->
+    <!-- 1. 顶部导航栏 (标题+副标题已收纳在此处) -->
     <Header siteTitle={SITE_TITLE} />
 
-    <!-- 2. 版面最顶部的视觉区域：展示标题与副标题 -->
-    {
-      showHero && (
-        <section class="w-full bg-base-200/30 border-b border-base-content/5 py-10 px-4 sm:px-6 lg:px-8 mb-6 backdrop-blur-sm">
-          <div class="max-w-7xl mx-auto text-center space-y-2">
-            <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-base-content">
-              {SITE_TITLE}
-            </h1>
-            <p class="text-sm sm:text-base text-base-content/70 font-light max-w-2xl mx-auto">
-              {SITE_DESCRIPTION}
-            </p>
-          </div>
-        </section>
-      )
-    }
-
-    <!-- 3. 双栏主体内容网格 -->
+    <!-- 2. 双栏主体内容网格 (已彻底关掉下方的重复 Hero 大 Banner) -->
     <div
       id="main-content-grid"
-      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12"
+      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-12"
     >
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         <!-- 主内容区（占据左侧 3 列为主视觉区） -->
@@ -121,7 +104,7 @@ const socialImageURL = new URL(image, Astro.site);
       </div>
     </div>
 
-    <!-- 4. 页脚与常用工具 -->
+    <!-- 3. 页脚与常用工具 -->
     <Footer
       author={SITE_AUTHOR}
       twitterHandle={TWITTER_HANDLE}
