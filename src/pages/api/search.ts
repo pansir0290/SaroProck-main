@@ -1,9 +1,9 @@
 /* eslint-disable style/max-statements-per-line */
 import type { APIRoute } from "astro";
-import { getCollection } from "astro:content";
 import { remark } from "remark";
 import strip from "strip-markdown";
 import { getAllPostsWithShortLinks } from "@/lib/blog";
+import { getChannelFeed } from "@/lib/telegram";
 
 interface SearchQuery {
   query: string;
@@ -26,44 +26,8 @@ interface SearchResult {
   };
 }
 
-// 兼容抓取 Feed/动态 数据的辅助函数
-async function getFeedEntries() {
-  let feeds: any[] = [];
-  try {
-    // 优先尝试读取 spec 集合
-    feeds = await getCollection("spec" as any);
-  } catch {
-    try {
-      // 其次尝试读取 feed 集合
-      feeds = await getCollection("feed" as any);
-    } catch {
-      feeds = [];
-    }
-  }
-
-  return feeds.map((item) => {
-    // 过滤 Markdown 标题符号，截取纯文本作为默认标题
-    const cleanBody = (item.body || "").replace(/^[#\s]+/gm, "").trim();
-    const firstLine = cleanBody.split("\n")[0] || "动态";
-    const autoTitle = firstLine.length > 30 ? `${firstLine.slice(0, 30)}...` : firstLine;
-
-    const id = item.id || item.slug || "";
-    
-    return {
-      data: {
-        title: item.data?.title || autoTitle,
-        description: item.data?.description || "",
-        tags: item.data?.tags || ["动态"],
-        categories: item.data?.categories || ["Telegram"],
-      },
-      body: item.body || "",
-      shortLink: `/feed#${id}`,
-      longUrl: `/feed#${id}`,
-    };
-  });
-}
-
-export const POST: APIRoute = async ({ request, site }) => {
+export const POST: APIRoute = async (context) => {
+  const { request, site } = context;
   try {
     const body = (await request.json()) as SearchQuery;
     const { query, tags, categories } = body;
@@ -84,11 +48,41 @@ export const POST: APIRoute = async ({ request, site }) => {
     // 1. 获取常规博客文章
     const blogPosts = await getAllPostsWithShortLinks(site);
 
-    // 2. 获取 Telegram 动态数据
-    const feedPosts = await getFeedEntries();
+    // 2. 通过 Telegram SDK/接口获取动态（传入搜索关键词 q，让后端/Telegram也预筛选一次）
+    let tgPosts: any[] = [];
+    try {
+      const feedResult = await getChannelFeed(context, { q: query.trim() });
+      tgPosts = feedResult?.posts || [];
+    } catch (e) {
+      console.error("Failed to fetch telegram feed for search:", e);
+    }
 
-    // 3. 合并所有内容数据源
-    const allPosts = [...blogPosts, ...feedPosts];
+    // 格式化 Telegram 动态为统一的数据格式
+    const formattedTgPosts = tgPosts.map((post) => {
+      // 提炼正文作为文本内容，并抓取前30字作为标题
+      const contentStr = post.content || post.text || post.body || "";
+      const cleanText = contentStr.replace(/^[#\s]+/gm, "").trim();
+      const firstLine = cleanText.split("\n")[0] || "TG 动态";
+      const title = firstLine.length > 30 ? `${firstLine.slice(0, 30)}...` : firstLine;
+
+      // 动态链接拼接到首页锚点或具体的动态路径
+      const targetUrl = post.id ? `/?before=${Number(post.id) + 1}#${post.id}` : "/";
+
+      return {
+        data: {
+          title,
+          description: cleanText.slice(0, 100),
+          tags: post.tags || ["动态"],
+          categories: ["Telegram"],
+        },
+        body: contentStr,
+        shortLink: targetUrl,
+        longUrl: targetUrl,
+      };
+    });
+
+    // 3. 合并 博客文章 + TG 动态
+    const allPosts = [...blogPosts, ...formattedTgPosts];
 
     const processor = remark().use(strip);
 
@@ -105,8 +99,14 @@ export const POST: APIRoute = async ({ request, site }) => {
         })
         .map(async (post) => {
           const { title = "", description = "", tags = [], categories = [] } = post.data;
-          const { value: content } = await processor.process(post.body);
-          const contentText = String(content);
+          
+          let contentText = "";
+          try {
+            const { value: content } = await processor.process(post.body);
+            contentText = String(content);
+          } catch {
+            contentText = post.body || "";
+          }
 
           let matchScore = 0;
           const matchDetails = { title: false, categories: false, tags: false, content: false };
