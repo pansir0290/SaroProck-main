@@ -12,10 +12,10 @@ interface Props {
 const { post, isLastItem = false } = Astro.props;
 ---
 
-<!-- 外层：干掉顶部所有边框，仅保留底部分隔线；移除强行拉开的外边距 -->
-<article class="w-full bg-base-100 border-t-0 border-b border-base-content/10 m-0 p-0 rounded-none shadow-none">
+<!-- 外层：干掉顶部所有边框，底部保留极细分隔线；溢出隐藏防止图片溢出像素白边 -->
+<article class="w-full bg-base-100 border-t-0 border-b border-base-content/10 m-0 p-0 rounded-none shadow-none overflow-hidden">
   
-  <!-- 1. 头部：头像 + 名字 + 时间（增加 pt-2 pb-1.5 保障头部充分露显） -->
+  <!-- 1. 头部：头像 + 名字 + 时间 -->
   <div class="flex items-center justify-between px-3 pt-2 pb-1.5 sm:px-4">
     <div class="flex items-center space-x-2 min-w-0">
       <a href={`/post/${post.id}`} class="block flex-shrink-0 leading-none">
@@ -58,34 +58,17 @@ const { post, isLastItem = false } = Astro.props;
     )
   }
 
-  <!-- 3. 文字内容区 -->
-  {
-    post.htmlContent && (
-      <div
-        class="prose prose-sm max-w-none px-3 sm:px-4 my-1 text-base-content/90 text-xs sm:text-sm leading-relaxed"
-        set:html={post.htmlContent}
-      />
-    )
-  }
-
-  <!-- 4. 媒体图片展示 -->
+  <!-- 3. 媒体图片展示（调整至文字上方，m-0 p-0 leading-none 彻底干掉所有白边） -->
   {
     post.media && post.media.length > 0 && (
-      <div class="w-full my-1">
+      <div class="w-full block m-0 p-0 leading-none overflow-hidden select-none">
         <MediaGallery media={post.media} postId={post.id} />
       </div>
     )
   }
 
-  <!-- 5. 链接预览 -->
-  {post.linkPreview && (
-    <div class="px-3 sm:px-4 my-1">
-      <LinkPreview link={post.linkPreview} />
-    </div>
-  )}
-
-  <!-- 6. 交互栏 -->
-  <div class="px-3 sm:px-4 py-1.5 flex items-center justify-between">
+  <!-- 4. 交互栏（点赞、分享、收藏） -->
+  <div class="px-3 sm:px-4 pt-2 pb-1 flex items-center justify-between">
     <div class="flex items-center space-x-3.5">
       <div class="relative z-10 flex items-center">
         <LikeButton postId={post.id} client:visible />
@@ -106,8 +89,25 @@ const { post, isLastItem = false } = Astro.props;
     </button>
   </div>
 
-  <!-- 7. 评论区：移除上边框 border-t，避免在无文字图片帖中形成细横杠分隔 -->
-  <div class="px-3 sm:px-4 pb-2 pt-0.5">
+  <!-- 5. 文字内容区（完美移至图片和交互栏下方，紧贴评论区） -->
+  {
+    post.htmlContent && (
+      <div
+        class="prose prose-sm max-w-none px-3 sm:px-4 py-1 text-base-content/90 text-xs sm:text-sm leading-relaxed"
+        set:html={post.htmlContent}
+      />
+    )
+  }
+
+  <!-- 6. 链接预览（如果在文字下方） -->
+  {post.linkPreview && (
+    <div class="px-3 sm:px-4 my-1">
+      <LinkPreview link={post.linkPreview} />
+    </div>
+  )}
+
+  <!-- 7. 评论区（紧贴底部） -->
+  <div class="px-3 sm:px-4 pb-2 pt-1">
     <Comments
       identifier={post.id}
       commentType="telegram"
