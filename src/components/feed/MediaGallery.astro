@@ -13,23 +13,23 @@ if (!media || media.length === 0) return null;
 const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)}`;
 ---
 
-<div class="relative group my-2 perspective-1000">
-  <!-- 滑动轨道：移除硬背景和边框，使用 overflow-visible 结合边缘渐隐 -->
+<div class="relative group w-full">
+  <!-- 滑动轨道：直接 100% 宽度贯穿 -->
   <div
     id={uniqueId}
-    class="gallery-track flex overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth py-2 px-2 gap-3"
+    class="flex overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth w-full bg-black/5"
   >
     {
       media.map((item, index) => (
         <div 
-          class="gallery-item flex-shrink-0 snap-center relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 ease-out bg-base-300/30 backdrop-blur-md border border-white/10"
-          style={`width: ${media.length === 1 ? '100%' : '88%'}; max-height: 520px; min-height: 260px;`}
+          class="w-full flex-shrink-0 snap-center flex items-center justify-center bg-black/20 relative"
+          style="aspect-ratio: 4/3; max-height: 550px;"
         >
           {item.type === "image" ? (
             <img
               src={item.url}
               alt={item.alt || `Media ${index + 1}`}
-              class="w-full h-full object-contain pointer-events-none select-none transition-transform duration-500 hover:scale-105"
+              class="w-full h-full object-cover select-none"
               loading="lazy"
             />
           ) : (
@@ -46,30 +46,30 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
     }
   </div>
 
-  <!-- 右上角 Instagram 胶囊指示器 -->
+  <!-- 右上角 Instagram 风格页码胶囊 -->
   {
     media.length > 1 && (
-      <div class="absolute top-4 right-4 bg-black/60 backdrop-blur-md border border-white/10 text-white text-[11px] font-mono px-3 py-1 rounded-full z-20 pointer-events-none shadow-md">
+      <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white text-[11px] font-mono px-2.5 py-1 rounded-full z-10 pointer-events-none border border-white/10">
         <span class="current-counter">1</span> / {media.length}
       </div>
     )
   }
 
-  <!-- 悬浮微光控制按钮 -->
+  <!-- 电脑端悬浮按钮 -->
   {
     media.length > 1 && (
       <>
         <button
           type="button"
-          class="prev-btn hidden group-hover:flex absolute left-4 top-1/2 -translate-y-1/2 btn btn-circle btn-sm bg-black/40 hover:bg-black/70 text-white border border-white/10 backdrop-blur-md transition-all duration-300 z-20 shadow-xl"
+          class="prev-btn hidden group-hover:flex absolute left-3 top-1/2 -translate-y-1/2 btn btn-circle btn-sm bg-black/50 hover:bg-black/80 text-white border-none backdrop-blur-sm transition-all z-10"
           aria-label="上一张"
           data-target={uniqueId}
         >
-          <i class="ri-arrow-left-s-line text-xl" />
+          <i class="ri-arrow-left-s-line text-lg" />
         </button>
         <button
           type="button"
-          class="next-btn hidden group-hover:flex absolute right-4 top-1/2 -translate-y-1/2 btn btn-circle btn-sm bg-black/40 hover:bg-black/70 text-white border border-white/10 backdrop-blur-md transition-all duration-300 z-20 shadow-xl"
+          class="next-btn hidden group-hover:flex absolute right-3 top-1/2 -translate-y-1/2 btn btn-circle btn-sm bg-black/50 hover:bg-black/80 text-white border-none backdrop-blur-sm transition-all z-10"
           aria-label="下一张"
           data-target={uniqueId}
         >
@@ -81,8 +81,8 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
 </div>
 
 <script>
-  function initInstagramEffect() {
-    // 左右按钮滑动
+  function initInstagramGallery() {
+    // 左右按键点击切换
     document.querySelectorAll(".prev-btn, .next-btn").forEach((btn) => {
       if (btn.hasAttribute("data-inited")) return;
       btn.setAttribute("data-inited", "true");
@@ -96,7 +96,7 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
         const container = document.getElementById(targetId);
         if (!container) return;
 
-        const scrollAmount = container.clientWidth * 0.88;
+        const scrollAmount = container.clientWidth;
         const isNext = btn.classList.contains("next-btn");
 
         container.scrollBy({
@@ -106,57 +106,29 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
       });
     });
 
-    // 监听滑动：计算 3D 悬浮物理倾斜与数字更新
+    // 自动跟进右顶角页码 (如 1 / 7)
     document.querySelectorAll('[id^="gallery-"]').forEach((container) => {
       if (container.hasAttribute("data-inited")) return;
       container.setAttribute("data-inited", "true");
 
       const counter = container.parentElement?.querySelector(".current-counter");
-      const items = container.querySelectorAll(".gallery-item");
-
-      const updateItemsEffect = () => {
-        const containerRect = container.getBoundingClientRect();
-        const containerCenter = containerRect.left + containerRect.width / 2;
-
-        items.forEach((item, index) => {
-          const itemRect = item.getBoundingClientRect();
-          const itemCenter = itemRect.left + itemRect.width / 2;
-          const distFromCenter = itemCenter - containerCenter;
-          const offsetRatio = distFromCenter / (containerRect.width / 2);
-
-          // 核心动效：滑出屏幕时的“旋转 + 缩放 + 透明”甩出感
-          const rotateY = Math.max(-15, Math.min(15, offsetRatio * -12));
-          const scale = Math.max(0.92, 1 - Math.abs(offsetRatio) * 0.08);
-          const opacity = Math.max(0.5, 1 - Math.abs(offsetRatio) * 0.4);
-
-          (item as HTMLElement).style.transform = `scale(${scale}) rotateY(${rotateY}deg)`;
-          (item as HTMLElement).style.opacity = `${opacity}`;
-        });
-
-        // 计算当前索引
-        if (counter && containerRect.width > 0) {
-          const scrollIndex = Math.round(container.scrollLeft / (containerRect.width * 0.88)) + 1;
-          counter.textContent = Math.min(items.length, Math.max(1, scrollIndex)).toString();
-        }
-      };
+      if (!counter) return;
 
       container.addEventListener("scroll", () => {
-        requestAnimationFrame(updateItemsEffect);
+        const width = container.clientWidth;
+        if (width <= 0) return;
+        
+        const index = Math.round(container.scrollLeft / width) + 1;
+        counter.textContent = index.toString();
       });
-
-      // 初始化一次效果
-      updateItemsEffect();
     });
   }
 
-  document.addEventListener("DOMContentLoaded", initInstagramEffect);
-  document.addEventListener("astro:page-load", initInstagramEffect);
+  document.addEventListener("DOMContentLoaded", initInstagramGallery);
+  document.addEventListener("astro:page-load", initInstagramGallery);
 </script>
 
 <style>
-  .perspective-1000 {
-    perspective: 1000px;
-  }
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
