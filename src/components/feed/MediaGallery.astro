@@ -13,9 +13,8 @@ if (!media || media.length === 0) return null;
 const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)}`;
 ---
 
-<!-- 外层：绝对裁切，强制无外边距/内边距 -->
 <div class="relative group w-full overflow-hidden block m-0 p-0 leading-none">
-  <!-- 滚动轨道：硬件加速，消除浮点数渲染误差 -->
+  <!-- 滚动轨道 -->
   <div
     id={uniqueId}
     class="flex overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth w-full m-0 p-0 leading-none border-none transform-gpu"
@@ -29,12 +28,6 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
             <img
               src={item.url}
               alt={item.alt || `Media ${index + 1}`}
-              /* 
-                 核心抗白边黑科技：
-                 1. scale-[1.015]：让图片微放大 1.5%，抹平任何设备上的 1px 亚像素舍入缝隙；
-                 2. object-cover block：确保图像充满且不产生行内基线留白；
-                 3. transform-gpu：开启显卡硬件加速渲染，防止设备缩放时锯齿。
-              */
               class="w-full h-full object-cover select-none block m-0 p-0 border-0 outline-none scale-[1.015] transform-gpu transition-transform duration-200"
               loading="lazy"
             />
@@ -52,7 +45,7 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
     }
   </div>
 
-  <!-- 右上角悬浮黑胶囊数字页码 -->
+  <!-- 1. 右上角悬浮胶囊页码（如 1/5） -->
   {
     media.length > 1 && (
       <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white text-[11px] font-mono px-2.5 py-1 rounded-full z-10 pointer-events-none border border-white/10 shadow-md">
@@ -61,7 +54,7 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
     )
   }
 
-  <!-- 电脑/平板端悬浮箭头按钮 -->
+  <!-- 2. PC 端左右悬浮箭头 -->
   {
     media.length > 1 && (
       <>
@@ -85,6 +78,24 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
     )
   }
 </div>
+
+<!-- 3. Ins 风格：底部动态圆点指示器（Dots Indicator） -->
+{
+  media.length > 1 && (
+    <div class="w-full flex items-center justify-center space-x-1.5 py-2 bg-base-100 border-none select-none">
+      {media.map((_, idx) => (
+        <span
+          class={`gallery-dot dot-${uniqueId} inline-block rounded-full transition-all duration-300 ${
+            idx === 0
+              ? "w-1.5 h-1.5 bg-primary scale-125"
+              : "w-1.5 h-1.5 bg-base-content/20"
+          }`}
+          data-index={idx}
+        />
+      ))}
+    </div>
+  )
+}
 
 <script>
   function initBleedGallery() {
@@ -112,20 +123,34 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
       });
     });
 
-    // 实时更新 1/8 胶囊页码
+    // 监听滑动：同时更新胶囊数字 和 底部小圆点高亮状态
     document.querySelectorAll('[id^="gallery-"]').forEach((container) => {
       if (container.hasAttribute("data-inited")) return;
       container.setAttribute("data-inited", "true");
 
+      const targetId = container.id;
       const counter = container.parentElement?.querySelector(".current-counter");
-      if (!counter) return;
+      const dots = document.querySelectorAll(`.dot-${targetId}`);
 
       container.addEventListener("scroll", () => {
         const width = container.clientWidth;
         if (width <= 0) return;
         
-        const index = Math.round(container.scrollLeft / width) + 1;
-        counter.textContent = index.toString();
+        const index = Math.round(container.scrollLeft / width);
+        
+        // 更新数字页码
+        if (counter) {
+          counter.textContent = (index + 1).toString();
+        }
+
+        // 更新圆点高亮状态
+        dots.forEach((dot, idx) => {
+          if (idx === index) {
+            dot.className = `gallery-dot dot-${targetId} inline-block w-1.5 h-1.5 rounded-full bg-primary scale-125 transition-all duration-300`;
+          } else {
+            dot.className = `gallery-dot dot-${targetId} inline-block w-1.5 h-1.5 rounded-full bg-base-content/20 transition-all duration-300`;
+          }
+        });
       });
     });
   }
