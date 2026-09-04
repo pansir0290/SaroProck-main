@@ -8,13 +8,13 @@ const { media } = Astro.props;
 
 if (!media || media.length === 0) return null;
 
-// 生成唯一组件 ID，防止同一页面有多条动态时冲突
+// 随机生成唯一ID，保证多条动态不冲突
 const uniqueId = `media-gallery-${Math.random().toString(36).substring(2, 9)}`;
 ---
 
 <div class="relative group my-3 rounded-xl overflow-hidden bg-black/10 border border-base-content/10">
   
-  <!-- 1. 原生 CSS 吸附滑动容器（手机端可直接左右滑动） -->
+  <!-- 1. 图片滑动轨道 (手机直接左右滑) -->
   <div
     id={uniqueId}
     class="flex overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth aspect-square sm:aspect-[4/3] max-h-[500px]"
@@ -43,7 +43,7 @@ const uniqueId = `media-gallery-${Math.random().toString(36).substring(2, 9)}`;
     }
   </div>
 
-  <!-- 2. 右上角页码指示器（Instagram 风格：1/6） -->
+  <!-- 2. 右上角页码 (如 1 / 6) -->
   {
     media.length > 1 && (
       <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white text-[11px] font-mono px-2.5 py-1 rounded-full z-10 pointer-events-none">
@@ -52,7 +52,7 @@ const uniqueId = `media-gallery-${Math.random().toString(36).substring(2, 9)}`;
     )
   }
 
-  <!-- 3. 电脑端左右箭头控制按钮（悬浮时显示） -->
+  <!-- 3. 电脑端左右点击箭头 -->
   {
     media.length > 1 && (
       <>
@@ -78,14 +78,15 @@ const uniqueId = `media-gallery-${Math.random().toString(36).substring(2, 9)}`;
 </div>
 
 <script>
-  // 绑定客户端滑动与点击事件
-  document.addEventListener("DOMContentLoaded", () => {
-    // 1. 电脑端按钮点击左右平滑滚动
+  function setupGallery() {
+    // 电脑点击左右切换
     document.querySelectorAll(".prev-btn, .next-btn").forEach((btn) => {
+      if (btn.hasAttribute("data-inited")) return;
+      btn.setAttribute("data-inited", "true");
+
       btn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-
         const targetId = btn.getAttribute("data-target");
         if (!targetId) return;
         const container = document.getElementById(targetId);
@@ -93,38 +94,33 @@ const uniqueId = `media-gallery-${Math.random().toString(36).substring(2, 9)}`;
 
         const scrollAmount = container.clientWidth;
         const isNext = btn.classList.contains("next-btn");
-
-        container.scrollBy({
-          left: isNext ? scrollAmount : -scrollAmount,
-          behavior: "smooth",
-        });
+        container.scrollBy({ left: isNext ? scrollAmount : -scrollAmount, behavior: "smooth" });
       });
     });
 
-    // 2. 监听滑动事件，自动更新右上角数字 (例如 1/6)
+    // 滑动时更新 1/6 页码
     document.querySelectorAll('[id^="media-gallery-"]').forEach((container) => {
+      if (container.hasAttribute("data-inited")) return;
+      container.setAttribute("data-inited", "true");
+
       const counter = container.parentElement?.querySelector(".current-counter");
       if (!counter) return;
 
       container.addEventListener("scroll", () => {
         const width = container.clientWidth;
         if (width <= 0) return;
-        
-        // 计算当前滑到了第几张
         const index = Math.round(container.scrollLeft / width) + 1;
         counter.textContent = index.toString();
       });
     });
-  });
+  }
+
+  // 确保页面加载完/切换页面后都能生效
+  document.addEventListener("DOMContentLoaded", setupGallery);
+  document.addEventListener("astro:page-load", setupGallery);
 </script>
 
 <style>
-  /* 隐藏滚动条 */
-  .scrollbar-none::-webkit-scrollbar {
-    display: none;
-  }
-  .scrollbar-none {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+  .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
