@@ -16,7 +16,7 @@ const { post, isLastItem = false } = Astro.props;
   <div
     class="relative w-full bg-base-100 sm:bg-base-200/40 sm:backdrop-blur-md sm:rounded-2xl border-y sm:border border-base-content/10 overflow-hidden shadow-none sm:shadow-sm"
   >
-    <!-- 1. 顶部栏：头像 + 姓名 + 时间（对齐图边缘内部） -->
+    <!-- 1. 顶部栏：头像 + 姓名 + 时间 -->
     <div class="flex items-center justify-between px-4 pt-3.5 pb-2.5">
       <div class="flex items-center space-x-3">
         <div class="avatar">
@@ -47,7 +47,7 @@ const { post, isLastItem = false } = Astro.props;
       )
     }
 
-    <!-- 3. 文字内容（内部舒适留白，左右对齐） -->
+    <!-- 3. 文字内容 -->
     {
       post.htmlContent && (
         <div
@@ -57,10 +57,10 @@ const { post, isLastItem = false } = Astro.props;
       )
     }
 
-    <!-- 4. 媒体大图区域（100% 霸屏无缝贴边） -->
+    <!-- 4. 媒体大图区域（彻底通栏贴边：w-full + 无左右内边距） -->
     {
       post.media && post.media.length > 0 && (
-        <div class="w-full my-1">
+        <div class="w-full mb-3 overflow-hidden">
           <MediaGallery media={post.media} postId={post.id} />
         </div>
       )
