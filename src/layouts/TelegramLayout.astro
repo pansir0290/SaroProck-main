@@ -1,8 +1,18 @@
 ---
 // src/layouts/TelegramLayout.astro
+import Header from "@components/layout/Header.astro";
 ---
 
-<!-- pt-4 或 pt-6 完美解决 Header 吸顶压住第一条帖子标题的问题 -->
-<div class="w-full max-w-2xl mx-auto pt-4 m-0 p-0 flex flex-col space-y-0 gap-0 border-x border-base-content/10 bg-base-100 min-h-screen">
-  <slot />
+<!-- 
+  w-full max-w-2xl: 强制限制整体宽度与你的帖子 DIV 完全一致！
+  这样 Header 和圆圈就会自动跟随帖子 DIV 对齐，不会再在大屏上单独全屏居中了。
+-->
+<div class="w-full max-w-2xl mx-auto m-0 p-0 flex flex-col space-y-0 gap-0 border-x border-base-content/10 bg-base-100 min-h-screen">
+  <!-- 顶部 Header & 圆圈，随帖子容器统一对齐 -->
+  <Header />
+
+  <!-- 帖子列表插入区域 -->
+  <div class="w-full pt-2">
+    <slot />
+  </div>
 </div>
