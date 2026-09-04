@@ -1,29 +1,67 @@
 ---
 // src/components/FuwariProfile.astro
+const socialLinks = [
+  {
+    name: "TG 频道",
+    icon: "ri-telegram-fill",
+    color: "from-sky-400 to-blue-500",
+    link: "https://t.me/pansir029",
+  },
+  {
+    name: "GitHub",
+    icon: "ri-github-fill",
+    color: "from-gray-700 to-gray-900 dark:from-gray-600 dark:to-gray-800",
+    link: "https://github.com/pansir0290",
+  },
+  {
+    name: "QQ",
+    icon: "ri-qq-fill",
+    color: "from-blue-400 to-indigo-600",
+    link: "tencent://message/?uin=你的QQ号",
+  },
+  {
+    name: "邮箱",
+    icon: "ri-mail-fill",
+    color: "from-amber-400 to-red-500",
+    link: "mailto:你的邮箱@example.com",
+  },
+  {
+    name: "X / Twitter",
+    icon: "ri-twitter-x-fill",
+    color: "from-gray-800 to-black dark:from-gray-100 dark:to-white dark:text-black",
+    link: "https://x.com/你的推特账号",
+  },
+  {
+    name: "RSS",
+    icon: "ri-rss-fill",
+    color: "from-orange-400 to-amber-500",
+    link: "/rss.xml",
+  },
+];
 ---
-<div class="fuwari-card p-5 flex flex-col items-center text-center relative overflow-hidden">
-  <!-- 头像区 (可自行修改头像路径) -->
-  <div class="relative mb-3 group">
-    <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-[var(--primary-fuwari)] shadow-sm transition-transform duration-300 group-hover:scale-105">
-      <img src="/avatar.png" alt="Avatar" class="w-full h-full object-cover" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=pansir'" />
-    </div>
-    <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-gray-800 rounded-full"></span>
-  </div>
 
-  <!-- 博主信息 -->
-  <h2 class="text-lg font-bold tracking-tight">pansir</h2>
-  <p class="text-xs text-base-content/60 mt-1">折腾不息 / 记录生活与技术</p>
-
-  <!-- 社交快捷入口 -->
-  <div class="flex items-center space-x-3 mt-4">
-    <a href="https://github.com/pansir0290" target="_blank" class="p-2 rounded-lg bg-base-200/50 hover:text-[var(--primary-fuwari)] transition-all">
-      <i class="ri-github-line text-base"></i>
-    </a>
-    <a href="https://t.me/pansir029" target="_blank" class="p-2 rounded-lg bg-base-200/50 hover:text-[var(--primary-fuwari)] transition-all">
-      <i class="ri-telegram-line text-base"></i>
-    </a>
-    <a href="/rss.xml" class="p-2 rounded-lg bg-base-200/50 hover:text-[var(--primary-fuwari)] transition-all">
-      <i class="ri-rss-line text-base"></i>
-    </a>
+<div class="w-full py-3 px-4 border-b border-base-content/10 bg-base-100 m-0">
+  <div class="flex items-center space-x-4 overflow-x-auto scrollbar-none py-1">
+    {
+      socialLinks.map((item) => (
+        <a
+          href={item.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex flex-col items-center flex-shrink-0 group cursor-pointer focus:outline-none"
+        >
+          <div class="p-[2px] rounded-full bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 group-hover:scale-105 transition-transform duration-200">
+            <div class="p-[2px] bg-base-100 rounded-full">
+              <div class={`w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br ${item.color} flex items-center justify-center text-white text-xl sm:text-2xl shadow-sm`}>
+                <i class={item.icon} />
+              </div>
+            </div>
+          </div>
+          <span class="text-[11px] text-base-content/80 mt-1 font-medium truncate max-w-[64px] text-center group-hover:text-primary transition-colors">
+            {item.name}
+          </span>
+        </a>
+      ))
+    }
   </div>
 </div>
