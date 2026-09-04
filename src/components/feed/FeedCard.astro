@@ -12,12 +12,12 @@ interface Props {
 const { post, isLastItem = false } = Astro.props;
 ---
 
-<!-- 关键点：加回 -mx-4 sm:mx-0，让卡片在手机端拉伸至整个屏幕边缘（通栏） -->
-<article class="dynamic-item my-6 -mx-4 sm:mx-0">
+<!-- 核心修改：使用 relative left-1/2 -translate-x-1/2 w-screen，强行破开父容器 Padding 做到绝对满屏 -->
+<article class="dynamic-item my-6 relative left-1/2 -translate-x-1/2 w-screen sm:static sm:translate-x-0 sm:w-full">
   <div
     class="relative w-full bg-base-100 sm:bg-base-200/40 sm:backdrop-blur-md sm:rounded-2xl border-y sm:border border-base-content/10 overflow-hidden shadow-none sm:shadow-sm"
   >
-    <!-- 1. 顶部栏：头像 + 姓名 + 时间（内部带 px-4 留白） -->
+    <!-- 1. 顶部栏：头像 + 姓名 + 时间 -->
     <div class="flex items-center justify-between px-4 pt-3.5 pb-2.5">
       <div class="flex items-center space-x-3">
         <div class="avatar">
@@ -58,7 +58,7 @@ const { post, isLastItem = false } = Astro.props;
       )
     }
 
-    <!-- 4. 媒体大图区域：天然 100% 满宽，绝对无缝 -->
+    <!-- 4. 媒体大图区域 -->
     {
       post.media && post.media.length > 0 && (
         <div class="w-full my-2">
