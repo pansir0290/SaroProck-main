@@ -1,10 +1,21 @@
 ---
 // src/components/layout/Header.astro
-// 将原本带有“サンpansir的随笔...”的旧 Header 替换为 Ins 圆球导航
 import FuwariProfile from "@components/FuwariProfile.astro";
+import SearchBar from "@components/widgets/SearchBar.astro"; // 引入原来的搜索框组件
 ---
 
 <header class="w-full bg-base-100 border-b border-base-content/10 sticky top-0 z-50">
-  <!-- 直接渲染 Ins 横向圆球导航 -->
+  <!-- 顶栏：显示博客标题与原版搜索框 -->
+  <div class="max-w-2xl mx-auto px-4 py-2.5 flex items-center justify-between border-b border-base-content/5">
+    <div class="flex items-center space-x-2">
+      <span class="font-bold text-base tracking-tight">サンpansir的随笔</span>
+    </div>
+    <!-- 还原搜索框 -->
+    <div class="w-40 sm:w-56">
+      <SearchBar />
+    </div>
+  </div>
+
+  <!-- 下层：Ins 风格 Highlights 圆环导航 -->
   <FuwariProfile />
 </header>
