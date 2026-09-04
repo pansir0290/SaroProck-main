@@ -1,12 +1,8 @@
 ---
 // src/layouts/TelegramLayout.astro
-import ChannelProfile from "@components/telegram/ChannelProfile.astro";
 ---
 
-<!-- 
-  1. max-w-2xl mx-auto: PC 端限制宽度居中，模拟 Ins 网页版单列流
-  2. m-0 p-0 flex flex-col space-y-0 gap-0: 彻底消除帖子间的垂直间距
--->
-<div class="w-full max-w-2xl mx-auto m-0 p-0 flex flex-col space-y-0 gap-0 border-x border-base-content/10 bg-base-100 min-h-screen">
+<!-- pt-4 或 pt-6 完美解决 Header 吸顶压住第一条帖子标题的问题 -->
+<div class="w-full max-w-2xl mx-auto pt-4 m-0 p-0 flex flex-col space-y-0 gap-0 border-x border-base-content/10 bg-base-100 min-h-screen">
   <slot />
 </div>
