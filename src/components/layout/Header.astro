@@ -13,14 +13,15 @@ import SearchBar from "@components/widgets/SearchBar.astro";
 
 <header class="w-full bg-base-100">
   <!-- 
-    精准对齐原生 Ins 比例：
-    1. pt-1.5 sm:pt-2：顶部收紧，不再做过大留白；
-    2. pb-3 sm:pb-4：把真正的呼吸感留白加在圆圈底部，拉开与第一个帖子的距离！
+    核心关键点：
+    1. pt-10 sm:pt-14：在顶部增加巨量的上内边距 (40px~56px)，
+       强行将 Logo 和圆圈列表往下推，实现“降下来”的视觉效果。
+    2. pb-3 sm:pb-4：底部保留关键留白，拉开与帖子的距离。
   -->
-  <div class="w-full max-w-2xl mx-auto px-4 pt-1.5 pb-3 sm:pt-2 sm:pb-4">
+  <div class="w-full max-w-2xl mx-auto px-4 pt-10 pb-3 sm:pt-14 sm:pb-4">
     
-    <!-- 顶栏标题 + 搜索框（高度收紧至 h-11，与 Ins 原生标题高度一致） -->
-    <div class="w-full h-11 flex items-center justify-between mb-1">
+    <!-- 顶栏标题 + 搜索框 -->
+    <div class="w-full h-14 flex items-center justify-between mb-1.5">
       <div class="flex items-center space-x-2">
         <a href="/" class="text-2xl sm:text-3xl font-bold tracking-normal ins-logo-font text-base-content hover:opacity-80 transition-opacity">
           サンpansir的随笔
