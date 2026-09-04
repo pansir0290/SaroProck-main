@@ -40,8 +40,9 @@ const socialLinks = [
 ];
 ---
 
-<div class="w-full py-3 px-4 border-b border-base-content/10 bg-base-100 m-0">
-  <div class="flex items-center space-x-4 overflow-x-auto scrollbar-none py-1">
+<!-- 限制最大宽度 max-w-4xl 并用 mx-auto 居中，与下方正文流严格对齐 -->
+<div class="w-full max-w-4xl mx-auto px-4 py-2 border-b border-base-content/10 bg-base-100">
+  <div class="flex items-center space-x-5 overflow-x-auto scrollbar-none py-1">
     {
       socialLinks.map((item) => (
         <a
@@ -50,6 +51,7 @@ const socialLinks = [
           rel="noopener noreferrer"
           class="flex flex-col items-center flex-shrink-0 group cursor-pointer focus:outline-none"
         >
+          <!-- Ins 经典彩环外圈 -->
           <div class="p-[2px] rounded-full bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 group-hover:scale-105 transition-transform duration-200">
             <div class="p-[2px] bg-base-100 rounded-full">
               <div class={`w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br ${item.color} flex items-center justify-center text-white text-xl sm:text-2xl shadow-sm`}>
@@ -57,6 +59,7 @@ const socialLinks = [
               </div>
             </div>
           </div>
+          <!-- 标签字号调整为 11px，紧凑精致 -->
           <span class="text-[11px] text-base-content/80 mt-1 font-medium truncate max-w-[64px] text-center group-hover:text-primary transition-colors">
             {item.name}
           </span>
