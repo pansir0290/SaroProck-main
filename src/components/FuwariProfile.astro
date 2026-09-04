@@ -41,12 +41,13 @@ const socialLinks = [
 ---
 
 <!-- 
-  核心微调：
-  原本 pb-4 (16px) 叠加上面转移过来的 12px，调整为 pb-[28px] (1.75rem)，
-  在不改变总像素高度的前提下，成功将 3 毫米空间完美的释放到了圆圈与下方正文之间！
+  精准修正：
+  1. 保留 -mx-4 sm:mx-0 贯穿全屏能力；
+  2. 保持圆圈尺寸 (w-16 h-16)、留白 (pb-[28px])、字体等完全不变；
+  3. 将内部轨道边距设为 pl-8 pr-4，抵消外层负边距后，最左侧正好留出精致的 16px 安全距，再也不会露出一半或贴边！
 -->
 <div class="-mx-4 sm:mx-0 pt-1 pb-[28px] bg-base-100">
-  <div class="flex items-center space-x-4 overflow-x-auto scrollbar-none px-4">
+  <div class="flex items-center space-x-4 overflow-x-auto scrollbar-none pl-8 pr-4">
     {
       socialLinks.map((item) => (
         <a
