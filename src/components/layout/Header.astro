@@ -13,22 +13,21 @@ import SearchBar from "@components/widgets/SearchBar.astro";
 
 <header class="w-full bg-base-100">
   <!-- 
-    核心关键点：
-    1. pt-10 sm:pt-14：在顶部增加巨量的上内边距 (40px~56px)，
-       强行将 Logo 和圆圈列表往下推，实现“降下来”的视觉效果。
-    2. pb-3 sm:pb-4：底部保留关键留白，拉开与帖子的距离。
+    精准压缩垂直留白：
+    pt-1 pb-1 sm:pt-2 sm:pb-2：顶部只留极其微小的安全呼吸感，
+    将整体高度压到极限，让第一张帖子的图片能在首屏完整呈现！
   -->
-  <div class="w-full max-w-2xl mx-auto px-4 pt-10 pb-3 sm:pt-14 sm:pb-4">
+  <div class="w-full max-w-2xl mx-auto px-3 pt-1 pb-1 sm:px-4 sm:pt-2 sm:pb-2">
     
-    <!-- 顶栏标题 + 搜索框 -->
-    <div class="w-full h-14 flex items-center justify-between mb-1.5">
+    <!-- 顶栏标题 + 搜索框（压缩高度至 h-9） -->
+    <div class="w-full h-9 flex items-center justify-between mb-0.5">
       <div class="flex items-center space-x-2">
         <a href="/" class="text-2xl sm:text-3xl font-bold tracking-normal ins-logo-font text-base-content hover:opacity-80 transition-opacity">
           サンpansir的随笔
         </a>
       </div>
 
-      <div class="w-36 sm:w-48 flex justify-end items-center">
+      <div class="w-32 sm:w-44 flex justify-end items-center">
         <SearchBar />
       </div>
     </div>
