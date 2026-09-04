@@ -1,65 +1,44 @@
 import rss from "@astrojs/rss";
-import { marked } from "marked";
-import { getAllPostsWithShortLinks } from "@/lib/blog";
+import type { APIContext } from "astro";
+import { getChannelFeed } from "@/lib/telegram";
 
-export async function GET(context: any) {
-  if (!context.site) {
-    throw new Error("A `site` property is required in your astro.config.mjs for this RSS feed to work.");
+export async function GET(context: APIContext) {
+  let posts: any[] = [];
+
+  try {
+    // 获取最新的 Telegram 频道动态
+    const tgFeed = await getChannelFeed(context);
+    posts = tgFeed?.posts || (Array.isArray(tgFeed) ? tgFeed : []);
+  } catch (e) {
+    console.error("生成 RSS 时获取 TG 动态失败:", e);
   }
-
-  const posts = await getAllPostsWithShortLinks(context.site);
-
-  function replacePath(content: string, siteUrl: string): string {
-    return content.replace(/(src|href)="([^"]+)"/g, (match, attr, value) => {
-      if (!/^https?:\/\/|^\/\//.test(value) && !value.startsWith("data:")) {
-        try {
-          return `${attr}="${new URL(value, siteUrl).toString()}"`;
-        }
-        catch {
-          return match;
-        }
-      }
-      return match;
-    });
-  }
-
-  const items = await Promise.all(posts.map(async (post) => {
-    const { data: { title, description, pubDate } } = post;
-
-    const content = post.body
-      ? replacePath(await marked.parse(post.body), context.site)
-      : "No content available.";
-
-    return {
-      title,
-      description,
-      link: post.shortLink || post.longUrl,
-      guid: post.longUrl,
-      content,
-      pubDate: new Date(pubDate),
-      customData: `<dc:creator><![CDATA[サンpansir的随笔]]></dc:creator>`,
-    };
-  }));
 
   return rss({
-    title: "サンpansir的随笔",
-    description: "一个孤独的地方，散落着一个人的人生碎片",
-    site: context.site.toString(),
-    items,
-    stylesheet: "/rss.xsl",
-    customData: `
-      <language>zh-CN</language>
-      <atom:link href="${new URL(context.url.pathname, context.site)}" rel="self" type="application/rss+xml" />
-      <image>
-        <url>${new URL("/favicon.png", context.site).toString()}</url>
-        <title>サンpansir的随笔</title>
-        <link>${context.site}</link>
-      </image>
-    `,
-    xmlns: {
-      dc: "http://purl.org/dc/elements/1.1/",
-      content: "http://purl.org/rss/1.0/modules/content/",
-      atom: "http://www.w3.org/2005/Atom",
-    },
+    // 你的 RSS 站点标题与描述
+    title: "潘聪的频道动态",
+    description: "感谢你的停留至此，这里记录生活与技术的点点滴滴。",
+    site: context.site || "https://www.34310889.xyz",
+    
+    // 将 TG 动态映射为 RSS 文章条目
+    items: posts.map((post) => {
+      const content = post.content || post.text || post.message || post.body || "";
+      // 截取前 30 个字作为标题，如果没有文字则显示“图文动态”
+      const rawTitle = content.trim().replace(/\n/g, " ");
+      const title = rawTitle ? (rawTitle.length > 30 ? rawTitle.slice(0, 30) + "..." : rawTitle) : "图文动态";
+      
+      // 提取消息发布时间
+      const pubDate = post.date ? new Date(post.date * 1000) : new Date();
+
+      return {
+        title: title,
+        pubDate: pubDate,
+        description: content,
+        // 拼接每条动态在 Telegram 的具体 URL 或本地锚点链接
+        link: post.link || post.url || `https://t.me/pansir029/${post.id || ''}`,
+      };
+    }),
+    
+    // 自定义 XML 语言
+    customData: `<language>zh-cn</language>`,
   });
 }
