@@ -162,10 +162,23 @@ article,
   }
 }
 
-/* 3. 移除 hover 时的上浮，保证 Ins 原生拉动感 */
-article:hover,
-[class*="FeedCard"]:hover,
-[class*="PostCard"]:hover {
-  transform: none !important;
-  box-shadow: none !important;
+/* =========================================================
+   Instagram 无缝流：强行清空列表容器的间距与灰底
+   ========================================================= */
+
+/* 强制帖子列表的父级容器取消 gap 和 space-y */
+main, 
+.feed-list,
+[class*="container"] {
+  gap: 0 !important;
+  row-gap: 0 !important;
+}
+
+/* 清除包裹 FeedCard 的直接子元素间距 */
+main > article,
+main > div > article,
+.dynamic-item {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  border-radius: 0 !important;
 }
