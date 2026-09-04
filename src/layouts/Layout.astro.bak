@@ -6,12 +6,13 @@ import "remixicon/fonts/remixicon.css";
 
 import type { MarkdownHeading } from "astro";
 import Header from "@components/layout/Header.astro";
+import Hero from "@components/layout/Hero.astro";
 import Sidebar from "@components/layout/Sidebar.astro";
 import Footer from "@components/layout/Footer.astro";
 import BackToTop from "@components/widgets/BackToTop.astro";
 
 const SITE_TITLE = "サンpansir的随笔";
-const SITE_DESCRIPTION = "一些随性的记录和不成熟的想法，漂浮在时间的河流里";
+const SITE_DESCRIPTION = "一个孤独的地方，散落着一个人的人生碎片";
 const SITE_AUTHOR = "pansir029";
 const OG_IMAGE_DEFAULT = "/default-social-image.png";
 const TWITTER_HANDLE = "@pansir029";
@@ -31,6 +32,7 @@ const {
   description = SITE_DESCRIPTION,
   image = OG_IMAGE_DEFAULT,
   headings = [],
+  showHero = title === "首页",
 } = Astro.props;
 
 const finalTitle = title === "首页" ? SITE_TITLE : `${title} | ${SITE_TITLE}`;
@@ -78,22 +80,41 @@ const socialImageURL = new URL(image, Astro.site);
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={socialImageURL} />
   </head>
-  <body class="bg-base-100 text-base-content min-h-screen topography">
-    <!-- 1. 顶部导航栏 (标题+副标题已收纳在此处) -->
+  <body class="bg-base-100 text-base-content min-h-screen relative selection:bg-primary/20">
+
+    <!-- 全局自然过渡背景（结合方案三优化） -->
+    <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none transition-colors duration-500">
+      <!-- 1. 顶部 Hero 光晕 -->
+      <div class="absolute -top-[10%] -left-[10%] w-[80vw] h-[60vh] rounded-full bg-gradient-to-br from-primary/20 via-purple-500/10 to-transparent blur-[140px] opacity-80"></div>
+      
+      <!-- 2. 中段衔接光晕：铺满重叠区域 -->
+      <div class="absolute top-[15%] right-0 w-[70vw] h-[60vh] rounded-full bg-gradient-to-bl from-pink-500/15 via-accent/10 to-transparent blur-[160px] opacity-70"></div>
+      
+      <!-- 3. 下部列表区域光晕 -->
+      <div class="absolute top-[50%] -left-[10%] w-[70vw] h-[60vh] rounded-full bg-gradient-to-tr from-primary/10 via-indigo-500/8 to-transparent blur-[160px] opacity-60"></div>
+    </div>
+
+    <!-- 【备用还原】：波纹等高线背景 -->
+    <!--
+    <div class="fixed inset-0 -z-10 pointer-events-none topography opacity-30"></div>
+    -->
+
     <Header siteTitle={SITE_TITLE} />
 
-    <!-- 2. 双栏主体内容网格 (已彻底关掉下方的重复 Hero 大 Banner) -->
+    {showHero && <Hero siteDescription={SITE_DESCRIPTION} />}
+
+    <!-- 使用方案三：通过 -mt-8 sm:-mt-12 让卡片区域向上重叠，遮盖边界断层 -->
     <div
       id="main-content-grid"
-      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-12"
+      class={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 relative z-10 ${
+        showHero ? "-mt-8 sm:-mt-12" : "pt-8"
+      }`}
     >
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        <!-- 主内容区（占据左侧 3 列为主视觉区） -->
-        <main class="lg:col-span-3 min-h-[60vh] space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <main class="lg:col-span-3 min-h-[60vh]">
           <slot />
         </main>
 
-        <!-- 侧边栏（占据右侧 1 列，悬浮紧凑排列） -->
         <Sidebar
           headings={headings}
           author={SITE_AUTHOR}
@@ -104,7 +125,6 @@ const socialImageURL = new URL(image, Astro.site);
       </div>
     </div>
 
-    <!-- 3. 页脚与常用工具 -->
     <Footer
       author={SITE_AUTHOR}
       twitterHandle={TWITTER_HANDLE}
@@ -113,15 +133,18 @@ const socialImageURL = new URL(image, Astro.site);
     />
 
     <BackToTop />
-
     <script is:inline>
       document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll(".btn-copy").forEach((button) => {
           button.addEventListener("click", async () => {
             const codeBlock = button.closest(".saro-code");
             const code = codeBlock.querySelector("code").textContent;
-            const copyIcon = button.querySelector(".saro-code-toolbar-copy-icon");
-            const successIcon = button.querySelector(".saro-code-toolbar-copy-success");
+            const copyIcon = button.querySelector(
+              ".saro-code-toolbar-copy-icon",
+            );
+            const successIcon = button.querySelector(
+              ".saro-code-toolbar-copy-success",
+            );
             try {
               await navigator.clipboard.writeText(code);
               copyIcon.classList.add("hidden");
