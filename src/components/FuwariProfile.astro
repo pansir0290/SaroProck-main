@@ -41,11 +41,11 @@ const socialLinks = [
 ---
 
 <!-- 
-  核心关键修改：
-  1. 外层使用 -mx-4 sm:mx-0 彻底把宽度拉伸到手机屏幕最左/最右两侧，突破 header 外层容器限制！
-  2. 内层 overflow-x-auto 加上 px-4，让默认状态左右有 16px 精致留白，但滑动时圆圈能顺畅贯穿屏幕边缘不卡切边！
+  核心微调：
+  原本 pb-4 (16px) 叠加上面转移过来的 12px，调整为 pb-[28px] (1.75rem)，
+  在不改变总像素高度的前提下，成功将 3 毫米空间完美的释放到了圆圈与下方正文之间！
 -->
-<div class="-mx-4 sm:mx-0 pt-1 pb-4 bg-base-100">
+<div class="-mx-4 sm:mx-0 pt-1 pb-[28px] bg-base-100">
   <div class="flex items-center space-x-4 overflow-x-auto scrollbar-none px-4">
     {
       socialLinks.map((item) => (
