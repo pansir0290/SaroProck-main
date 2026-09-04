@@ -40,9 +40,13 @@ const socialLinks = [
 ];
 ---
 
-<!-- 彻底干掉 border-b，增加 pb-4 让圆圈与下方第一个帖子产生自然留白 -->
-<div class="w-full pt-1 pb-4 px-3 bg-base-100">
-  <div class="flex items-center space-x-4 overflow-x-auto scrollbar-none px-1">
+<!-- 
+  核心关键修改：
+  1. 外层使用 -mx-4 sm:mx-0 彻底把宽度拉伸到手机屏幕最左/最右两侧，突破 header 外层容器限制！
+  2. 内层 overflow-x-auto 加上 px-4，让默认状态左右有 16px 精致留白，但滑动时圆圈能顺畅贯穿屏幕边缘不卡切边！
+-->
+<div class="-mx-4 sm:mx-0 pt-1 pb-4 bg-base-100">
+  <div class="flex items-center space-x-4 overflow-x-auto scrollbar-none px-4">
     {
       socialLinks.map((item) => (
         <a
@@ -66,3 +70,13 @@ const socialLinks = [
     }
   </div>
 </div>
+
+<style>
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
