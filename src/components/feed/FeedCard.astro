@@ -12,10 +12,10 @@ interface Props {
 const { post, isLastItem = false } = Astro.props;
 ---
 
-<article class="dynamic-item my-8 border-b border-base-content/10 pb-6">
+<article class="dynamic-item my-8 border-b border-base-content/10 pb-6 w-full">
   <div class="relative w-full">
-    <!-- 1. 顶部：头像 + 用户名 + 时间 -->
-    <div class="flex items-center justify-between mb-3 px-1 sm:px-0">
+    <!-- 1. 顶部：头像 + 用户名 + 时间 (宽度 100% 对齐) -->
+    <div class="flex items-center justify-between mb-3 w-full">
       <div class="flex items-center space-x-3">
         <div class="avatar">
           <div class="w-10 h-10 rounded-full ring-1 ring-primary/30 ring-offset-1 ring-offset-base-100">
@@ -34,7 +34,7 @@ const { post, isLastItem = false } = Astro.props;
     <!-- 2. 引用回复 -->
     {
       post.reply && (
-        <div class="mb-3 px-1 sm:px-0">
+        <div class="mb-3 w-full">
           <a href={post.reply.url} class="block not-prose no-underline group/reply">
             <blockquote class="text-xs p-2.5 bg-base-200/60 rounded-lg border-l-2 border-primary group-hover/reply:bg-base-200 transition-colors">
               <p class="font-bold text-base-content">{post.reply.author}</p>
@@ -45,20 +45,20 @@ const { post, isLastItem = false } = Astro.props;
       )
     }
 
-    <!-- 3. 文字内容 -->
+    <!-- 3. 文字内容 (宽度 100% 对齐) -->
     {
       post.htmlContent && (
         <div
-          class="prose prose-sm max-w-none mb-3 px-1 sm:px-0 text-base-content/90 text-sm leading-relaxed"
+          class="prose prose-sm max-w-none mb-3 w-full text-base-content/90 text-sm leading-relaxed"
           set:html={post.htmlContent}
         />
       )
     }
 
-    <!-- 4. 媒体大图区域：用负边距 (-mx-4 或 -mx-3) 强行“撞爆”左右边缘，实现小红书通栏沉浸感 -->
+    <!-- 4. 媒体大图区域 (取消负外边距，和标题文字完全等宽) -->
     {
       post.media && post.media.length > 0 && (
-        <div class="-mx-4 sm:-mx-6 my-3 w-[calc(100%+2rem)] sm:w-[calc(100%+3rem)]">
+        <div class="w-full my-3 rounded-2xl overflow-hidden">
           <MediaGallery media={post.media} postId={post.id} />
         </div>
       )
@@ -66,13 +66,13 @@ const { post, isLastItem = false } = Astro.props;
 
     <!-- 5. 链接预览 -->
     {post.linkPreview && (
-      <div class="my-3 px-1 sm:px-0">
+      <div class="my-3 w-full">
         <LinkPreview link={post.linkPreview} />
       </div>
     )}
 
     <!-- 6. 底部互动与评论 -->
-    <div class="px-1 sm:px-0 mt-3">
+    <div class="w-full mt-3">
       <footer class="flex items-center justify-between pt-2 text-xs text-base-content/60">
         <div class="flex items-center space-x-1">
           <i class="ri-bar-chart-line text-sm opacity-70"></i>
