@@ -2,7 +2,6 @@
 // src/components/layout/Sidebar.astro
 import type { MarkdownHeading } from "astro";
 import TOC from "@components/blog/TOC.astro";
-import { getChannelFeed } from "@/lib/telegram";
 
 export interface Props {
   author: string;
@@ -14,47 +13,13 @@ export interface Props {
 
 const { headings, author, twitterHandle, githubUrl, telegramUrl } = Astro.props;
 
-// 1. 仅获取 Telegram 频道动态数据
-let tgPosts: any[] = [];
-try {
-  const tgFeed = await getChannelFeed(Astro, {});
-  tgPosts = tgFeed?.posts || (Array.isArray(tgFeed) ? tgFeed : []);
-} catch (e) {
-  console.error("Sidebar TG Stats Fetch Error:", e);
-}
-
-// 精准统计中英文字数
-const countWords = (text: string) => {
-  if (!text) return 0;
-  text = text.replace(/[\u3000-\u303F\uFF00-\uFFEF]/g, "");
-  text = text.replace(/[`*~_#+\-!\[\]{}()>|]/g, "");
-  const cjkChars = text.match(/[\u4e00-\u9fa5]/g)?.length || 0;
-  const otherWords =
-    text.replace(/[\u4e00-\u9fa5]/g, " ").match(/\b\w+\b/g)?.length || 0;
-  return cjkChars + otherWords;
-};
-
-// 仅汇总 TG 动态的字数
-const tgTotalWords = tgPosts.reduce((acc, post) => {
-  const content = post.content || post.text || post.message || post.body || "";
-  return acc + countWords(String(content));
-}, 0);
-
-const formattedTotalWords =
-  tgTotalWords >= 1000 ? `${(tgTotalWords / 1000).toFixed(1)}k` : `${tgTotalWords}`;
-
-// 仅展示 Telegram 统计结果
-const stats = {
-  articles: tgPosts.length,
-  words: formattedTotalWords,
-};
-
 const QQ_GROUP_NUMBER = "34310889";
 const EMAIL_ADDRESS = "pansir029@gmail.com";
 ---
 
 <aside class="lg:col-span-1 no-print">
   <div class="sticky top-20 space-y-4">
+    <!-- 个人信息卡片 -->
     <div
       class="bg-base-200/40 backdrop-blur-sm rounded-xl p-4 border border-base-content/5 space-y-4"
     >
@@ -139,36 +104,31 @@ const EMAIL_ADDRESS = "pansir029@gmail.com";
         <TOC headings={headings} />
       ) : (
         <>
-          <div class="bg-base-200/40 backdrop-blur-sm rounded-xl p-5 border border-base-content/5">
-            <h3 class="font-semibold text-base mb-5 flex items-center">
-              <i class="ri-bar-chart-fill text-primary mr-2" />
-              动态统计
-            </h3>
-            <div class="space-y-5">
-              <div class="flex items-center gap-4">
-                <div class="w-12 text-center">
-                  <i class="ri-telegram-line text-4xl text-primary/70" />
-                </div>
-                <div>
-                  <p class="text-2xl font-semibold leading-tight">
-                    {stats.articles}
-                  </p>
-                  <p class="text-sm text-base-content/70">条动态</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-4">
-                <div class="w-12 text-center">
-                  <i class="ri-file-word-2-line text-4xl text-primary/70" />
-                </div>
-                <div>
-                  <p class="text-2xl font-semibold leading-tight">
-                    {stats.words}
-                  </p>
-                  <p class="text-sm text-base-content/70">总字数</p>
-                </div>
-              </div>
+          <!-- 替换为：每日一言卡片（自动刷新切换） -->
+          <div class="bg-base-200/40 backdrop-blur-sm rounded-xl p-4 border border-base-content/5">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-semibold text-sm flex items-center gap-1.5">
+                <i class="ri-chat-quote-line text-primary" />
+                <span>每日一言</span>
+              </h3>
+              <!-- 刷新按钮：点击手动换一句 -->
+              <button
+                id="refresh-hitokoto"
+                class="btn btn-ghost btn-xs btn-circle text-base-content/50 hover:text-primary transition-all"
+                title="换一句"
+              >
+                <i class="ri-refresh-line text-xs" />
+              </button>
             </div>
+            <p id="hitokoto-text" class="text-xs text-base-content/70 italic leading-relaxed min-h-[3em]">
+              正在加载句子...
+            </p>
+            <p id="hitokoto-from" class="text-[10px] text-base-content/40 text-right mt-1.5 font-mono">
+              — Hitokoto
+            </p>
           </div>
+
+          <!-- 联系方式卡片 -->
           <div class="bg-base-200/40 backdrop-blur-sm rounded-xl p-4 border border-base-content/5">
             <h3 class="font-semibold text-base mb-5 flex items-center">
               <i class="ri-contacts-book-line text-primary mr-2" />
@@ -200,6 +160,7 @@ const EMAIL_ADDRESS = "pansir029@gmail.com";
 
 <script define:vars={{ QQ_GROUP_NUMBER }}>
   document.addEventListener("DOMContentLoaded", () => {
+    // 1. 频道复制按钮逻辑
     const copyChannelBtn = document.getElementById("copy-channel-btn");
     const channelLinkElement = document.getElementById("telegram-channel-link");
 
@@ -224,6 +185,7 @@ const EMAIL_ADDRESS = "pansir029@gmail.com";
       });
     }
 
+    // 2. QQ 复制按钮逻辑
     const copyQqBtn = document.getElementById("copy-qq-btn");
     if (copyQqBtn) {
       const originalText = copyQqBtn.innerHTML;
@@ -250,6 +212,41 @@ const EMAIL_ADDRESS = "pansir029@gmail.com";
               copyQqBtn.classList.remove("btn-error", "text-error-content");
             }, 2000);
           });
+      });
+    }
+
+    // 3. 一言（Hitokoto）自动获取与手动刷新逻辑
+    const hitokotoText = document.getElementById("hitokoto-text");
+    const hitokotoFrom = document.getElementById("hitokoto-from");
+    const refreshBtn = document.getElementById("refresh-hitokoto");
+
+    async function fetchHitokoto() {
+      if (!hitokotoText) return;
+      try {
+        const res = await fetch("https://v1.hitokoto.cn");
+        const data = await res.json();
+        hitokotoText.textContent = `“${data.hitokoto}”`;
+        if (hitokotoFrom) {
+          hitokotoFrom.textContent = `— ${data.from_who || ""}《${data.from}》`;
+        }
+      } catch (e) {
+        hitokotoText.textContent = "“流水不争先，争的是滔滔不绝。”";
+      }
+    }
+
+    // 页面加载时抓取一次
+    fetchHitokoto();
+
+    // 点击按钮手动刷新
+    if (refreshBtn) {
+      refreshBtn.addEventListener("click", () => {
+        const icon = refreshBtn.querySelector("i");
+        if (icon) icon.classList.add("animate-spin");
+        fetchHitokoto().finally(() => {
+          setTimeout(() => {
+            if (icon) icon.classList.remove("animate-spin");
+          }, 500);
+        });
       });
     }
   });
