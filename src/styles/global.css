@@ -119,3 +119,53 @@ code {
 .animate-like-pulse {
   animation: like-pulse 0.4s ease-in-out;
 }
+/* =========================================================
+   Instagram 极致无缝流 & 内容显示强行修正
+   ========================================================= */
+
+/* 1. 强行归零列表容器的上下间距 (取消 gap 和 space-y) */
+#main-content-grid main,
+#main-content-grid main > div,
+#main-content-grid main > section {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  row-gap: 0 !important;
+}
+
+#main-content-grid main > * {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* 2. 帖子卡片样式归零：取消外边距、取消大阴影、改为极细底边框 */
+article,
+[class*="FeedCard"],
+[class*="PostCard"] {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-top: none !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  background-color: var(--card-fuwari-bg, #ffffff) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  article,
+  [class*="FeedCard"],
+  [class*="PostCard"] {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+}
+
+/* 3. 移除 hover 时的上浮，保证 Ins 原生拉动感 */
+article:hover,
+[class*="FeedCard"]:hover,
+[class*="PostCard"]:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
