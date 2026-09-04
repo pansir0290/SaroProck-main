@@ -12,11 +12,11 @@ interface Props {
 const { post, isLastItem = false } = Astro.props;
 ---
 
-<!-- 外层：去掉所有 margin，背景直接设为纯白/纯黑，底部只留极细的一条分割线 -->
-<article class="w-full bg-base-100 border-b border-base-content/10 m-0 p-0 rounded-none shadow-none">
+<!-- 外层：干掉顶部所有边框，仅保留底部分隔线；移除强行拉开的外边距 -->
+<article class="w-full bg-base-100 border-t-0 border-b border-base-content/10 m-0 p-0 rounded-none shadow-none">
   
-  <!-- 1. 极致回收的头部：py-1.5 极窄高度，头像 28px(w-7 h-7) 行内与文字严丝合缝 -->
-  <div class="flex items-center justify-between px-3 py-1.5 sm:px-4">
+  <!-- 1. 头部：头像 + 名字 + 时间（增加 pt-2 pb-1.5 保障头部充分露显） -->
+  <div class="flex items-center justify-between px-3 pt-2 pb-1.5 sm:px-4">
     <div class="flex items-center space-x-2 min-w-0">
       <a href={`/post/${post.id}`} class="block flex-shrink-0 leading-none">
         <img 
@@ -26,7 +26,7 @@ const { post, isLastItem = false } = Astro.props;
         />
       </a>
       
-      <!-- 名字 + 时间 在同一行 -->
+      <!-- 名字 + 时间 -->
       <div class="flex items-center space-x-1.5 text-xs sm:text-sm truncate leading-none">
         <a href={`/post/${post.id}`} class="font-bold text-base-content hover:text-primary transition-colors truncate">
           サンpansir的随笔
@@ -85,7 +85,7 @@ const { post, isLastItem = false } = Astro.props;
   )}
 
   <!-- 6. 交互栏 -->
-  <div class="px-3 sm:px-4 py-1 flex items-center justify-between">
+  <div class="px-3 sm:px-4 py-1.5 flex items-center justify-between">
     <div class="flex items-center space-x-3.5">
       <div class="relative z-10 flex items-center">
         <LikeButton postId={post.id} client:visible />
@@ -106,8 +106,8 @@ const { post, isLastItem = false } = Astro.props;
     </button>
   </div>
 
-  <!-- 7. 评论区（紧贴底部） -->
-  <div class="px-3 sm:px-4 pb-2 pt-1 border-t border-base-content/5">
+  <!-- 7. 评论区：移除上边框 border-t，避免在无文字图片帖中形成细横杠分隔 -->
+  <div class="px-3 sm:px-4 pb-2 pt-0.5">
     <Comments
       identifier={post.id}
       commentType="telegram"
