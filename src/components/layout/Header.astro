@@ -12,16 +12,10 @@ import SearchBar from "@components/widgets/SearchBar.astro";
 </style>
 
 <header class="w-full bg-base-100">
-  <!-- 
-    精准微调：
-    pt-[34px] pb-3 sm:pt-[42px] sm:pb-4
-    这里使用了像素级任意值！比之前的 40px 精准拉升了 6px（约 1.5 毫米），
-    绝不多抬一分，彻底满足极度精准的强迫症对齐！
-  -->
-  <div class="w-full max-w-2xl mx-auto px-4 pt-[34px] pb-3 sm:pt-[42px] sm:pb-4">
+  <div class="w-full max-w-2xl mx-auto pt-[34px] pb-3 sm:pt-[42px] sm:pb-4">
     
-    <!-- 顶栏标题 + 搜索框 -->
-    <div class="w-full h-14 flex items-center justify-between">
+    <!-- 1. 顶栏标题 + 搜索框：保留 px-4 保证文字不贴边 -->
+    <div class="w-full h-14 flex items-center justify-between px-4">
       <div class="flex items-center space-x-2">
         <a href="/" class="text-xl sm:text-2xl font-bold tracking-normal ins-logo-font text-base-content hover:opacity-80 transition-opacity">
           サンpansir的随笔
@@ -33,8 +27,8 @@ import SearchBar from "@components/widgets/SearchBar.astro";
       </div>
     </div>
 
-    <!-- Ins Highlights 圆球列表 -->
-    <div class="w-full">
+    <!-- 2. Ins Highlights 圆球列表：取消 px-4 约束，贯穿全屏宽度 -->
+    <div class="w-full overflow-hidden">
       <FuwariProfile />
     </div>
 
