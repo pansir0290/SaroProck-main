@@ -13,16 +13,16 @@ import SearchBar from "@components/widgets/SearchBar.astro";
 
 <header class="w-full bg-base-100">
   <!-- 
-    精准往上提“半丢丢”：
-    pt-7 sm:pt-9：顶部留白设为 28px（PC 端 36px），
-    比之前的 pt-10 整体提上去了一小截，刚好抵消浏览器的部分底栏影响！
+    核心调整：
+    在原代码基础上加入 pt-7 pb-3 sm:pt-9 sm:pb-4，
+    刚好把顶部往上提了“半丢丢”，完美平衡浏览器底栏的高度影响！
   -->
   <div class="w-full max-w-2xl mx-auto px-4 pt-7 pb-3 sm:pt-9 sm:pb-4">
     
     <!-- 顶栏标题 + 搜索框 -->
-    <div class="w-full h-14 flex items-center justify-between mb-1.5">
+    <div class="w-full h-14 flex items-center justify-between">
       <div class="flex items-center space-x-2">
-        <a href="/" class="text-2xl sm:text-3xl font-bold tracking-normal ins-logo-font text-base-content hover:opacity-80 transition-opacity">
+        <a href="/" class="text-xl sm:text-2xl font-bold tracking-normal ins-logo-font text-base-content hover:opacity-80 transition-opacity">
           サンpansir的随笔
         </a>
       </div>
@@ -32,7 +32,7 @@ import SearchBar from "@components/widgets/SearchBar.astro";
       </div>
     </div>
 
-    <!-- Ins Highlights 圆球列表 -->
+    <!-- Ins Highlights 圆球列表（跟标题同在一个 max-w-2xl 容器里，彻底对齐帖子） -->
     <div class="w-full">
       <FuwariProfile />
     </div>
