@@ -12,11 +12,11 @@ interface Props {
 const { post, isLastItem = false } = Astro.props;
 ---
 
-<article class="dynamic-item my-6 -mx-4 sm:mx-0">
+<article class="dynamic-item my-6 w-full">
   <div
     class="relative w-full bg-base-100 sm:bg-base-200/40 sm:backdrop-blur-md sm:rounded-2xl border-y sm:border border-base-content/10 overflow-hidden shadow-none sm:shadow-sm"
   >
-    <!-- 1. 顶部栏：头像 + 姓名 + 时间 -->
+    <!-- 1. 顶部栏：头像 + 姓名 + 时间（内部带 px-4 留白） -->
     <div class="flex items-center justify-between px-4 pt-3.5 pb-2.5">
       <div class="flex items-center space-x-3">
         <div class="avatar">
@@ -33,7 +33,7 @@ const { post, isLastItem = false } = Astro.props;
       </div>
     </div>
 
-    <!-- 2. 引用回复 -->
+    <!-- 2. 引用回复（内部带 px-4 留白） -->
     {
       post.reply && (
         <div class="px-4 mb-2">
@@ -47,7 +47,7 @@ const { post, isLastItem = false } = Astro.props;
       )
     }
 
-    <!-- 3. 文字内容 -->
+    <!-- 3. 文字内容（内部带 px-4 留白） -->
     {
       post.htmlContent && (
         <div
@@ -57,23 +57,23 @@ const { post, isLastItem = false } = Astro.props;
       )
     }
 
-    <!-- 4. 媒体大图区域（彻底通栏贴边：w-full + 无左右内边距） -->
+    <!-- 4. 媒体大图区域：彻底取消所有外边距与负边距，原生 100% 宽 -->
     {
       post.media && post.media.length > 0 && (
-        <div class="w-full mb-3 overflow-hidden">
+        <div class="w-full my-2">
           <MediaGallery media={post.media} postId={post.id} />
         </div>
       )
     }
 
-    <!-- 5. 链接预览 -->
+    <!-- 5. 链接预览（内部带 px-4 留白） -->
     {post.linkPreview && (
       <div class="px-4 my-2">
         <LinkPreview link={post.linkPreview} />
       </div>
     )}
 
-    <!-- 6. 底部互动栏与评论区 -->
+    <!-- 6. 底部互动栏与评论区（内部带 px-4 留白） -->
     <div class="px-4 pb-3">
       <footer class="flex items-center justify-between pt-3 border-t border-base-content/10 text-xs text-base-content/60">
         <div class="flex items-center space-x-1">
