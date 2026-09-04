@@ -13,9 +13,8 @@ if (!media || media.length === 0) return null;
 const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)}`;
 ---
 
-<!-- 使用 -mx-4 负边距往左右拉伸，彻底覆盖白边，并恢复固定 aspect-[4/5] 确保不变形 -->
-<div class="relative group w-full -mx-4 sm:mx-0 overflow-hidden">
-  <!-- 滑动轨道：绝对贴边 100% 宽度 -->
+<div class="relative group w-full overflow-hidden">
+  <!-- 滑动轨道：绝对贴边 100% 宽度，无任何 Margin/Padding -->
   <div
     id={uniqueId}
     class="flex overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth w-full bg-black/10"
@@ -46,7 +45,7 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
     }
   </div>
 
-  <!-- 右上角小红书/Ins 悬浮黑胶囊数字页码 -->
+  <!-- 右上角悬浮黑胶囊数字页码 -->
   {
     media.length > 1 && (
       <div class="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-[11px] font-mono px-2.5 py-1 rounded-full z-10 pointer-events-none border border-white/10 shadow-md">
