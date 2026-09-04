@@ -12,9 +12,14 @@ import SearchBar from "@components/widgets/SearchBar.astro";
 </style>
 
 <header class="w-full bg-base-100">
-  <div class="w-full max-w-2xl mx-auto pt-[34px] pb-3 sm:pt-[42px] sm:pb-4">
+  <!-- 
+    核心微调：
+    原本 pt-[34px] 精准减去 12px (约 3 毫米) 变为 pt-[22px] (PC 端同理 pt-[30px])，
+    把这 12px 空间的“指标”挪给下面的 FuwariProfile 组件底部！
+  -->
+  <div class="w-full max-w-2xl mx-auto pt-[22px] pb-3 sm:pt-[30px] sm:pb-4">
     
-    <!-- 1. 顶栏标题 + 搜索框：保留 px-4 保证文字不贴边 -->
+    <!-- 1. 顶栏标题 + 搜索框 -->
     <div class="w-full h-14 flex items-center justify-between px-4">
       <div class="flex items-center space-x-2">
         <a href="/" class="text-xl sm:text-2xl font-bold tracking-normal ins-logo-font text-base-content hover:opacity-80 transition-opacity">
@@ -27,8 +32,8 @@ import SearchBar from "@components/widgets/SearchBar.astro";
       </div>
     </div>
 
-    <!-- 2. Ins Highlights 圆球列表：取消 px-4 约束，贯穿全屏宽度 -->
-    <div class="w-full overflow-hidden">
+    <!-- 2. Ins Highlights 圆球列表 -->
+    <div class="-mx-4 sm:mx-0 overflow-visible">
       <FuwariProfile />
     </div>
 
