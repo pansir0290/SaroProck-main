@@ -17,18 +17,18 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
   <!-- 滑动轨道：绝对贴边 100% 宽度 -->
   <div
     id={uniqueId}
-    class="flex overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth w-full bg-black/10"
+    class="flex overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth w-full bg-black/5"
   >
     {
       media.map((item, index) => (
         <div 
-          class="w-full flex-shrink-0 snap-center flex items-center justify-center bg-black/20 relative aspect-[4/5] max-h-[80vh]"
+          class="w-full flex-shrink-0 snap-center flex items-center justify-center bg-black/10 relative overflow-hidden"
         >
           {item.type === "image" ? (
             <img
               src={item.url}
               alt={item.alt || `Media ${index + 1}`}
-              class="w-full h-full object-cover select-none"
+              class="w-full h-auto max-h-[85vh] object-cover block select-none"
               loading="lazy"
             />
           ) : (
@@ -37,7 +37,7 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
               controls
               preload="metadata"
               playsinline
-              class="w-full h-full object-contain"
+              class="w-full h-auto max-h-[85vh] object-contain block"
             />
           )}
         </div>
@@ -48,7 +48,7 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
   <!-- 右上角小红书/Ins 悬浮黑胶囊数字页码 -->
   {
     media.length > 1 && (
-      <div class="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-[11px] font-mono px-2.5 py-1 rounded-full z-10 pointer-events-none border border-white/10 shadow-md">
+      <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white text-[11px] font-mono px-2.5 py-1 rounded-full z-10 pointer-events-none border border-white/10 shadow-md">
         <span class="current-counter">1</span> / {media.length}
       </div>
     )
