@@ -12,8 +12,8 @@ interface Props {
 const { post, isLastItem = false } = Astro.props;
 ---
 
-<!-- 核心修改：使用 relative left-1/2 -translate-x-1/2 w-screen，强行破开父容器 Padding 做到绝对满屏 -->
-<article class="dynamic-item my-6 relative left-1/2 -translate-x-1/2 w-screen sm:static sm:translate-x-0 sm:w-full">
+<!-- 使用 -mx-4 负外边距配合 w-[calc(100%+2rem)] 强行将卡片推至屏幕极左极右 -->
+<article class="dynamic-item my-4 sm:my-6 -mx-4 sm:mx-0 w-[calc(100%+2rem)] sm:w-full">
   <div
     class="relative w-full bg-base-100 sm:bg-base-200/40 sm:backdrop-blur-md sm:rounded-2xl border-y sm:border border-base-content/10 overflow-hidden shadow-none sm:shadow-sm"
   >
