@@ -3,129 +3,53 @@
 @plugin "@tailwindcss/typography";
 
 /* =========================================================
-   Fuwari & Instagram Hybrid Design System (Tailwind v4)
+   Fuwari & Instagram Hybrid Design System
    ========================================================= */
 
 :root {
-  /* Fuwari 主题色 Engine (Hue: 0 - 360) */
   --hue: 250;
   --primary-fuwari: hsl(var(--hue), 85%, 60%);
   --primary-fuwari-hover: hsl(var(--hue), 85%, 52%);
   --bg-fuwari: hsl(var(--hue), 25%, 97%);
-  --card-fuwari-bg: rgba(255, 255, 255, 0.95);
-  --card-fuwari-border: rgba(0, 0, 0, 0.06);
+  --card-fuwari-bg: #ffffff;
+  --card-fuwari-border: rgba(0, 0, 0, 0.08);
   --text-fuwari-main: #1a1b26;
   --text-fuwari-sub: #565f89;
-  --radius-fuwari: 0.75rem; /* 极致精细圆角 */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --bg-fuwari: hsl(var(--hue), 20%, 8%);
-    --card-fuwari-bg: rgba(20, 21, 30, 0.95);
+    --card-fuwari-bg: #14151e;
     --card-fuwari-border: rgba(255, 255, 255, 0.08);
     --text-fuwari-main: #f3f4f6;
     --text-fuwari-sub: #9ca3af;
   }
 }
 
-/* 1. 深度覆盖全局背景并严防移动端横向晃动 */
+/* 1. 全局背景与移动端防晃动 */
 html,
 body {
   background-color: var(--bg-fuwari) !important;
   color: var(--text-fuwari-main) !important;
-  transition: background-color 0.3s ease, color 0.3s ease;
   overflow-x: hidden !important;
   max-width: 100vw;
   position: relative;
 }
 
-/* 2. 覆盖 DaisyUI 默认的主题变量 */
+/* 2. 覆盖 DaisyUI 变量 */
 :root, [data-theme] {
   --b1: var(--bg-fuwari) !important;
   --b2: var(--card-fuwari-bg) !important;
   --p: var(--primary-fuwari) !important;
 }
 
-/* 3. Instagram 极简流式组件样式适配 */
-@layer components {
-  /* 侧边栏与普通组件保留微轻量毛玻璃 */
-  [class*="Sidebar"],
-  .fuwari-card {
-    background: var(--card-fuwari-bg) !important;
-    backdrop-filter: blur(16px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-    border: 1px solid var(--card-fuwari-border) !important;
-    border-radius: var(--radius-fuwari) !important;
-  }
-
-  /* 核心：贴子 article 与 FeedCard 全面向 Ins 靠拢，零外边距、消除多余悬浮与缝隙 */
-  article,
-  [class*="FeedCard"] {
-    background: var(--card-fuwari-bg) !important;
-    border-bottom: 1px solid var(--card-fuwari-border) !important;
-    border-top: none !important;
-    border-left: none !important;
-    border-right: none !important;
-    border-radius: 0 !important;
-    margin-bottom: 0 !important;
-    box-shadow: none !important;
-    transition: background-color 0.2s ease !important;
-  }
-
-  /* 移动端保证 100% 通栏无边框与无外边距 */
-  @media (max-width: 639px) {
-    article,
-    [class*="FeedCard"] {
-      border-left: none !important;
-      border-right: none !important;
-      border-radius: 0 !important;
-      margin-left: 0 !important;
-      margin-right: 0 !important;
-    }
-  }
-
-  /* 取消 Ins 帖子卡片的上浮和强烈外阴影，维持社交原生的平滑微感 */
-  article:hover,
-  [class*="FeedCard"]:hover {
-    transform: none !important;
-    box-shadow: none !important;
-  }
-
-  /* 按钮 Ins/Fuwari 精致化 */
-  .btn-primary,
-  .fuwari-btn {
-    background-color: var(--primary-fuwari) !important;
-    color: #ffffff !important;
-    border-radius: 0.5rem !important;
-    border: none !important;
-    font-weight: 600 !important;
-    transition: all 0.2s ease !important;
-  }
-
-  .btn-primary:hover,
-  .fuwari-btn:hover {
-    background-color: var(--primary-fuwari-hover) !important;
-    opacity: 0.9;
-  }
-}
-
-/* =========================================================
-   原样式与工具类 (完整保留)
-   ========================================================= */
-
+/* 3. 保留代码高亮等原有工具样式 */
 .scrollbar-none {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
   &::-webkit-scrollbar {
-    display: none; /* Chrome, Safari and Opera */
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .saro-code,
-  .saro-code span {
-    color: var(--shiki-dark) !important;
+    display: none;
   }
 }
 
@@ -175,54 +99,23 @@ code {
 .saro-code-content .line::before {
   content: counter(line);
   color: currentColor;
-  margin-right: 1rem; /* 16px */
+  margin-right: 1rem;
   display: inline-block;
-  width: 1rem; /* 16px */
+  width: 1rem;
   text-align: right;
 }
 
 .btn-copy {
   cursor: pointer;
   position: relative;
-  overflow: hidden;
-}
-.copy-success {
-  animation: pulse 0.5s ease-in-out;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
 }
 
 @keyframes like-pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
-  }
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
 }
 
 .animate-like-pulse {
   animation: like-pulse 0.4s ease-in-out;
-}
-
-i.emoji {
-  font-style: normal !important;
-  vertical-align: middle;
-}
-
-.katex-display {
-  @apply overflow-x-auto;
 }
