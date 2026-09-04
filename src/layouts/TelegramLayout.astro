@@ -3,6 +3,10 @@
 import ChannelProfile from "@components/telegram/ChannelProfile.astro";
 ---
 
-<div class="space-y-6">
+<!-- 
+  1. max-w-2xl mx-auto: PC 端限制宽度居中，模拟 Ins 网页版单列流
+  2. m-0 p-0 flex flex-col space-y-0 gap-0: 彻底消除帖子间的垂直间距
+-->
+<div class="w-full max-w-2xl mx-auto m-0 p-0 flex flex-col space-y-0 gap-0 border-x border-base-content/10 bg-base-100 min-h-screen">
   <slot />
 </div>
