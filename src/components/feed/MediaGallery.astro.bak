@@ -13,22 +13,29 @@ if (!media || media.length === 0) return null;
 const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)}`;
 ---
 
-<div class="relative group w-full overflow-hidden">
-  <!-- 滑动轨道：绝对贴边 100% 宽度，无任何 Margin/Padding -->
+<!-- 外层：绝对裁切，强制无外边距/内边距 -->
+<div class="relative group w-full overflow-hidden block m-0 p-0 leading-none">
+  <!-- 滚动轨道：硬件加速，消除浮点数渲染误差 -->
   <div
     id={uniqueId}
-    class="flex overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth w-full bg-black/10"
+    class="flex overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth w-full m-0 p-0 leading-none border-none transform-gpu"
   >
     {
       media.map((item, index) => (
         <div 
-          class="w-full flex-shrink-0 snap-center flex items-center justify-center bg-black/20 relative aspect-[4/5] max-h-[80vh]"
+          class="w-full flex-shrink-0 snap-center flex items-center justify-center relative aspect-[4/5] m-0 p-0 overflow-hidden border-none outline-none bg-base-100"
         >
           {item.type === "image" ? (
             <img
               src={item.url}
               alt={item.alt || `Media ${index + 1}`}
-              class="w-full h-full object-cover select-none block"
+              /* 
+                 核心抗白边黑科技：
+                 1. scale-[1.015]：让图片微放大 1.5%，抹平任何设备上的 1px 亚像素舍入缝隙；
+                 2. object-cover block：确保图像充满且不产生行内基线留白；
+                 3. transform-gpu：开启显卡硬件加速渲染，防止设备缩放时锯齿。
+              */
+              class="w-full h-full object-cover select-none block m-0 p-0 border-0 outline-none scale-[1.015] transform-gpu transition-transform duration-200"
               loading="lazy"
             />
           ) : (
@@ -37,7 +44,7 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
               controls
               preload="metadata"
               playsinline
-              class="w-full h-full object-contain block"
+              class="w-full h-full object-cover block m-0 p-0 border-0 outline-none scale-[1.015] transform-gpu"
             />
           )}
         </div>
@@ -48,13 +55,13 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
   <!-- 右上角悬浮黑胶囊数字页码 -->
   {
     media.length > 1 && (
-      <div class="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-[11px] font-mono px-2.5 py-1 rounded-full z-10 pointer-events-none border border-white/10 shadow-md">
+      <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white text-[11px] font-mono px-2.5 py-1 rounded-full z-10 pointer-events-none border border-white/10 shadow-md">
         <span class="current-counter">1</span> / {media.length}
       </div>
     )
   }
 
-  <!-- 电脑端悬浮箭头按钮 -->
+  <!-- 电脑/平板端悬浮箭头按钮 -->
   {
     media.length > 1 && (
       <>
