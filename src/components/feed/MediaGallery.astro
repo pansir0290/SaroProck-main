@@ -1,0 +1,138 @@
+---
+import type { MediaFile } from "@/types";
+
+interface Props {
+  media?: MediaFile[];
+  postId?: string;
+}
+
+const { media, postId } = Astro.props;
+
+if (!media || media.length === 0) return null;
+
+const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)}`;
+---
+
+<div class="relative group w-full overflow-hidden">
+  <!-- 滑动轨道：绝对贴边 100% 宽度 -->
+  <div
+    id={uniqueId}
+    class="flex overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth w-full bg-black/10"
+  >
+    {
+      media.map((item, index) => (
+        <div 
+          class="w-full flex-shrink-0 snap-center flex items-center justify-center bg-black/20 relative aspect-[4/5] max-h-[80vh]"
+        >
+          {item.type === "image" ? (
+            <img
+              src={item.url}
+              alt={item.alt || `Media ${index + 1}`}
+              class="w-full h-full object-cover select-none"
+              loading="lazy"
+            />
+          ) : (
+            <video
+              src={item.url}
+              controls
+              preload="metadata"
+              playsinline
+              class="w-full h-full object-contain"
+            />
+          )}
+        </div>
+      ))
+    }
+  </div>
+
+  <!-- 右上角小红书/Ins 悬浮黑胶囊数字页码 -->
+  {
+    media.length > 1 && (
+      <div class="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-[11px] font-mono px-2.5 py-1 rounded-full z-10 pointer-events-none border border-white/10 shadow-md">
+        <span class="current-counter">1</span> / {media.length}
+      </div>
+    )
+  }
+
+  <!-- 电脑端悬浮箭头按钮 -->
+  {
+    media.length > 1 && (
+      <>
+        <button
+          type="button"
+          class="prev-btn hidden group-hover:flex absolute left-3 top-1/2 -translate-y-1/2 btn btn-circle btn-sm bg-black/50 hover:bg-black/80 text-white border-none backdrop-blur-sm transition-all z-10"
+          aria-label="上一张"
+          data-target={uniqueId}
+        >
+          <i class="ri-arrow-left-s-line text-lg" />
+        </button>
+        <button
+          type="button"
+          class="next-btn hidden group-hover:flex absolute right-3 top-1/2 -translate-y-1/2 btn btn-circle btn-sm bg-black/50 hover:bg-black/80 text-white border-none backdrop-blur-sm transition-all z-10"
+          aria-label="下一张"
+          data-target={uniqueId}
+        >
+          <i class="ri-arrow-right-s-line text-lg" />
+        </button>
+      </>
+    )
+  }
+</div>
+
+<script>
+  function initBleedGallery() {
+    // 左右按钮点击切换
+    document.querySelectorAll(".prev-btn, .next-btn").forEach((btn) => {
+      if (btn.hasAttribute("data-inited")) return;
+      btn.setAttribute("data-inited", "true");
+
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const targetId = btn.getAttribute("data-target");
+        if (!targetId) return;
+        const container = document.getElementById(targetId);
+        if (!container) return;
+
+        const scrollAmount = container.clientWidth;
+        const isNext = btn.classList.contains("next-btn");
+
+        container.scrollBy({
+          left: isNext ? scrollAmount : -scrollAmount,
+          behavior: "smooth",
+        });
+      });
+    });
+
+    // 实时更新 1/8 胶囊页码
+    document.querySelectorAll('[id^="gallery-"]').forEach((container) => {
+      if (container.hasAttribute("data-inited")) return;
+      container.setAttribute("data-inited", "true");
+
+      const counter = container.parentElement?.querySelector(".current-counter");
+      if (!counter) return;
+
+      container.addEventListener("scroll", () => {
+        const width = container.clientWidth;
+        if (width <= 0) return;
+        
+        const index = Math.round(container.scrollLeft / width) + 1;
+        counter.textContent = index.toString();
+      });
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", initBleedGallery);
+  document.addEventListener("astro:page-load", initBleedGallery);
+</script>
+
+<style>
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
