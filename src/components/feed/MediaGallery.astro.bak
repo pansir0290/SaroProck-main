@@ -13,23 +13,22 @@ if (!media || media.length === 0) return null;
 const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)}`;
 ---
 
-<div class="relative group w-full">
-  <!-- 滑动轨道：直接 100% 宽度贯穿 -->
+<div class="relative group w-full overflow-hidden">
+  <!-- 滑动轨道：绝对贴边 100% 宽度，无任何 Margin/Padding -->
   <div
     id={uniqueId}
-    class="flex overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth w-full bg-black/5"
+    class="flex overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth w-full bg-black/10"
   >
     {
       media.map((item, index) => (
         <div 
-          class="w-full flex-shrink-0 snap-center flex items-center justify-center bg-black/20 relative"
-          style="aspect-ratio: 4/3; max-height: 550px;"
+          class="w-full flex-shrink-0 snap-center flex items-center justify-center bg-black/20 relative aspect-[4/5] max-h-[80vh]"
         >
           {item.type === "image" ? (
             <img
               src={item.url}
               alt={item.alt || `Media ${index + 1}`}
-              class="w-full h-full object-cover select-none"
+              class="w-full h-full object-cover select-none block"
               loading="lazy"
             />
           ) : (
@@ -38,7 +37,7 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
               controls
               preload="metadata"
               playsinline
-              class="w-full h-full object-contain"
+              class="w-full h-full object-contain block"
             />
           )}
         </div>
@@ -46,16 +45,16 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
     }
   </div>
 
-  <!-- 右上角 Instagram 风格页码胶囊 -->
+  <!-- 右上角悬浮黑胶囊数字页码 -->
   {
     media.length > 1 && (
-      <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white text-[11px] font-mono px-2.5 py-1 rounded-full z-10 pointer-events-none border border-white/10">
+      <div class="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-[11px] font-mono px-2.5 py-1 rounded-full z-10 pointer-events-none border border-white/10 shadow-md">
         <span class="current-counter">1</span> / {media.length}
       </div>
     )
   }
 
-  <!-- 电脑端悬浮按钮 -->
+  <!-- 电脑端悬浮箭头按钮 -->
   {
     media.length > 1 && (
       <>
@@ -81,8 +80,8 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
 </div>
 
 <script>
-  function initInstagramGallery() {
-    // 左右按键点击切换
+  function initBleedGallery() {
+    // 左右按钮点击切换
     document.querySelectorAll(".prev-btn, .next-btn").forEach((btn) => {
       if (btn.hasAttribute("data-inited")) return;
       btn.setAttribute("data-inited", "true");
@@ -106,7 +105,7 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
       });
     });
 
-    // 自动跟进右顶角页码 (如 1 / 7)
+    // 实时更新 1/8 胶囊页码
     document.querySelectorAll('[id^="gallery-"]').forEach((container) => {
       if (container.hasAttribute("data-inited")) return;
       container.setAttribute("data-inited", "true");
@@ -124,8 +123,8 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
     });
   }
 
-  document.addEventListener("DOMContentLoaded", initInstagramGallery);
-  document.addEventListener("astro:page-load", initInstagramGallery);
+  document.addEventListener("DOMContentLoaded", initBleedGallery);
+  document.addEventListener("astro:page-load", initBleedGallery);
 </script>
 
 <style>
