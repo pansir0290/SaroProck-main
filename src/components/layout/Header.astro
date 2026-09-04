@@ -13,21 +13,21 @@ import SearchBar from "@components/widgets/SearchBar.astro";
 
 <header class="w-full bg-base-100">
   <!-- 
-    精准压缩垂直留白：
-    pt-1 pb-1 sm:pt-2 sm:pb-2：顶部只留极其微小的安全呼吸感，
-    将整体高度压到极限，让第一张帖子的图片能在首屏完整呈现！
+    精准往上提“半丢丢”：
+    pt-7 sm:pt-9：顶部留白设为 28px（PC 端 36px），
+    比之前的 pt-10 整体提上去了一小截，刚好抵消浏览器的部分底栏影响！
   -->
-  <div class="w-full max-w-2xl mx-auto px-3 pt-1 pb-1 sm:px-4 sm:pt-2 sm:pb-2">
+  <div class="w-full max-w-2xl mx-auto px-4 pt-7 pb-3 sm:pt-9 sm:pb-4">
     
-    <!-- 顶栏标题 + 搜索框（压缩高度至 h-9） -->
-    <div class="w-full h-9 flex items-center justify-between mb-0.5">
+    <!-- 顶栏标题 + 搜索框 -->
+    <div class="w-full h-14 flex items-center justify-between mb-1.5">
       <div class="flex items-center space-x-2">
         <a href="/" class="text-2xl sm:text-3xl font-bold tracking-normal ins-logo-font text-base-content hover:opacity-80 transition-opacity">
           サンpansir的随笔
         </a>
       </div>
 
-      <div class="w-32 sm:w-44 flex justify-end items-center">
+      <div class="w-36 sm:w-48 flex justify-end items-center">
         <SearchBar />
       </div>
     </div>
