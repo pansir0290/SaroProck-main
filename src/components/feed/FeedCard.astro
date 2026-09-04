@@ -1,10 +1,10 @@
 ---
-// FeedCard.astro
+// src/components/FeedCard.astro (全量代码)
 export interface Props {
-  title: string;
-  avatar?: string;
+  title?: string;
   author?: string;
-  timeAgo: string;
+  avatar?: string;
+  timeAgo?: string;
   coverImage?: string;
   content?: string;
   likeCount?: number;
@@ -13,8 +13,8 @@ export interface Props {
 
 const {
   title,
-  avatar = "/avatar.png",
   author = "サンpansir的随笔",
+  avatar = "/avatar.png",
   timeAgo = "7个月前",
   coverImage,
   content,
@@ -23,99 +23,93 @@ const {
 } = Astro.props;
 ---
 
-<article class="w-full bg-base-100 border-b border-base-200/60 dark:border-base-800/60 mb-0 last:border-b-0 text-base-content transition-colors">
+<article class="w-full bg-base-100 border-b border-base-200 dark:border-base-800 text-base-content mb-0 last:border-b-0">
   
-  <!-- 1. Ins 风格极简头部 Header (收窄高度，头像缩小，作者与时间同行) -->
-  <div class="flex items-center justify-between px-3 py-2.5 sm:px-4">
-    <div class="flex items-center space-x-2.5 min-w-0">
-      <!-- 缩小内收的头像 -->
-      <a href="#" class="block flex-shrink-0">
-        <img 
-          src={avatar} 
-          alt={author} 
-          class="w-8 h-8 rounded-full object-cover ring-1 ring-base-content/10 dark:ring-white/20"
-        />
-      </a>
-      
-      <!-- 作者名 + 时间戳 同行平行排列 -->
+  <!-- 1. 紧凑顶栏：头像缩小(w-7 h-7) + 名字与时间平行同行 -->
+  <div class="flex items-center justify-between px-3 py-2 sm:px-4">
+    <div class="flex items-center space-x-2 min-w-0">
+      <img 
+        src={avatar} 
+        alt={author} 
+        class="w-7 h-7 rounded-full object-cover ring-1 ring-base-content/10"
+      />
       <div class="flex items-center space-x-1.5 text-xs sm:text-sm truncate">
-        <span class="font-semibold text-base-content hover:opacity-80 transition-opacity truncate">
+        <span class="font-bold text-base-content hover:opacity-80 transition-opacity">
           {author}
         </span>
-        <span class="text-base-content/40 text-[10px] sm:text-xs">•</span>
-        <span class="text-base-content/50 text-[11px] sm:text-xs flex-shrink-0">
+        <span class="text-base-content/40 text-[10px]">•</span>
+        <span class="text-base-content/50 text-[11px]">
           {timeAgo}
         </span>
       </div>
     </div>
 
-    <!-- 右侧更多操作小图标 (可选) -->
-    <button class="text-base-content/60 hover:text-base-content p-1">
+    <button aria-label="More options" class="text-base-content/50 hover:text-base-content p-1">
       <i class="ri-more-fill text-lg"></i>
     </button>
   </div>
 
-  <!-- 2. 图片通栏区域 (保留破框/通栏效果) -->
+  <!-- 2. 图片展示区 (带判断：有图片才渲染) -->
   {coverImage && (
-    <div class="relative w-full overflow-hidden bg-base-200/50">
+    <div class="w-full overflow-hidden bg-base-200/40">
       <img 
         src={coverImage} 
-        alt={title} 
+        alt={title || "Post image"} 
         class="w-full h-auto max-h-[600px] object-cover block"
         loading="lazy"
       />
     </div>
   )}
 
-  <!-- 3. Ins 风格交互工具栏 (点赞、评论、转发、收藏) -->
-  <div class="px-3 pt-3 pb-1 sm:px-4 flex items-center justify-between">
+  <!-- 3. Ins 风格交互动作栏 -->
+  <div class="px-3 pt-2.5 pb-1 sm:px-4 flex items-center justify-between">
     <div class="flex items-center space-x-4">
-      <!-- 点赞 -->
-      <button class="flex items-center space-x-1 text-base-content hover:text-red-500 transition-colors group">
-        <i class="ri-heart-line text-2xl group-hover:scale-110 transition-transform"></i>
+      <button aria-label="Like" class="flex items-center space-x-1 text-base-content hover:text-red-500 transition-colors">
+        <i class="ri-heart-line text-2xl"></i>
         {likeCount > 0 && <span class="text-xs font-semibold">{likeCount}</span>}
       </button>
 
-      <!-- 评论 -->
-      <button class="flex items-center space-x-1 text-base-content hover:text-primary transition-colors">
+      <button aria-label="Comment" class="flex items-center space-x-1 text-base-content hover:text-primary transition-colors">
         <i class="ri-chat-3-line text-2xl"></i>
         {commentCount > 0 && <span class="text-xs font-semibold">{commentCount}</span>}
       </button>
 
-      <!-- 分享/转发 -->
-      <button class="text-base-content hover:text-primary transition-colors">
+      <button aria-label="Share" class="text-base-content hover:text-primary transition-colors">
         <i class="ri-send-plane-line text-2xl"></i>
       </button>
     </div>
 
-    <!-- 收藏 -->
-    <button class="text-base-content hover:text-primary transition-colors">
+    <button aria-label="Bookmark" class="text-base-content hover:text-primary transition-colors">
       <i class="ri-bookmark-line text-2xl"></i>
     </button>
   </div>
 
-  <!-- 4. 正文与标题区域 -->
-  <div class="px-3 py-1.5 sm:px-4 text-xs sm:text-sm leading-relaxed">
+  <!-- 4. 文字/标题/正文区 (确保 Slot 和 Content 能正常输出) -->
+  <div class="px-3 py-1.5 sm:px-4 text-xs sm:text-sm leading-relaxed space-y-1">
     {title && (
-      <h2 class="font-bold text-base-content mb-1 text-sm sm:text-base">
+      <h2 class="font-bold text-base-content text-sm sm:text-base">
         {title}
       </h2>
     )}
-    {content && (
-      <p class="text-base-content/80 line-clamp-3">
-        {content}
-      </p>
+    
+    <!-- 优先渲染传入的 content，如果没有则渲染 Astro 的默认 Slot -->
+    {content ? (
+      <p class="text-base-content/90 whitespace-pre-line">{content}</p>
+    ) : (
+      <div class="text-base-content/90">
+        <slot />
+      </div>
     )}
   </div>
 
-  <!-- 5. Ins 风格无缝底部评论输入栏 (贴紧底部作为帖子间自然分隔) -->
-  <div class="px-3 py-2 sm:px-4 border-t border-base-200/40 dark:border-base-800/40 flex items-center space-x-2 mt-2">
+  <!-- 5. 评论输入框 (作为帖子的天然底部结尾，直接衔接下一帖) -->
+  <div class="px-3 py-2 sm:px-4 border-t border-base-200/50 dark:border-base-800/50 flex items-center space-x-2 mt-2">
     <input 
       type="text" 
       placeholder="留下你的想法..." 
-      class="w-full bg-transparent text-xs sm:text-sm text-base-content placeholder:text-base-content/40 focus:outline-none py-1"
+      class="w-full bg-transparent text-xs sm:text-sm text-base-content placeholder:text-base-content/40 focus:outline-none py-0.5"
     />
-    <button class="text-primary font-semibold text-xs sm:text-sm hover:opacity-80 transition-opacity px-1 flex-shrink-0">
+    <button class="text-primary font-bold text-xs sm:text-sm hover:opacity-80 transition-opacity flex-shrink-0 px-1">
       发布
     </button>
   </div>
