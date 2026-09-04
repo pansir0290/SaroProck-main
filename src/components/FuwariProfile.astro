@@ -40,8 +40,8 @@ const socialLinks = [
 ];
 ---
 
-<!-- 1:1 复刻 Ins 原生 Story 栏：放大圆圈与间距 -->
-<div class="w-full pt-2 pb-3 px-3 bg-base-100 border-b border-base-content/10">
+<!-- 彻底干掉 border-b，增加 pb-4 让圆圈与下方第一个帖子产生自然留白 -->
+<div class="w-full pt-1 pb-4 px-3 bg-base-100">
   <div class="flex items-center space-x-4 overflow-x-auto scrollbar-none px-1">
     {
       socialLinks.map((item) => (
@@ -51,7 +51,6 @@ const socialLinks = [
           rel="noopener noreferrer"
           class="flex flex-col items-center flex-shrink-0 group cursor-pointer focus:outline-none"
         >
-          <!-- 对应 Ins 68px/72px 经典渐变彩圈 -->
           <div class="p-[2.5px] rounded-full bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 group-hover:scale-105 transition-transform duration-200">
             <div class="p-[2px] bg-base-100 rounded-full">
               <div class={`w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-br ${item.color} flex items-center justify-center text-white text-2xl sm:text-3xl shadow-sm`}>
@@ -59,7 +58,6 @@ const socialLinks = [
               </div>
             </div>
           </div>
-          <!-- 标签字号对齐 Ins -->
           <span class="text-xs text-base-content/80 mt-1.5 font-normal tracking-tight truncate max-w-[72px] text-center group-hover:text-primary transition-colors">
             {item.name}
           </span>
