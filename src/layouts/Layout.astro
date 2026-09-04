@@ -80,8 +80,8 @@ const socialImageURL = new URL(image, Astro.site);
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={socialImageURL} />
   </head>
-  <!-- 加入 overflow-x-hidden 确保移动端不晃动 -->
-  <body class="bg-base-100 text-base-content min-h-screen relative selection:bg-primary/20 overflow-x-hidden">
+  <!-- 全局强制消除横向溢出，确保移动端没有任何晃动空间 -->
+  <body class="bg-base-100 text-base-content min-h-screen relative selection:bg-primary/20 overflow-x-hidden w-full max-w-full">
 
     <!-- 全局自然过渡背景 -->
     <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none transition-colors duration-500">
@@ -94,10 +94,10 @@ const socialImageURL = new URL(image, Astro.site);
 
     {showHero && <Hero siteDescription={SITE_DESCRIPTION} />}
 
-    <!-- 核心修改：移动端 px-0，电脑端 sm:px-6 lg:px-8 -->
+    <!-- 核心调整：移动端 px-0 + overflow-x-hidden 严防晃动，电脑端 sm:px-6 lg:px-8 -->
     <div
       id="main-content-grid"
-      class={`max-w-6xl mx-auto px-0 sm:px-6 lg:px-8 pb-8 relative z-10 ${
+      class={`max-w-6xl mx-auto px-0 sm:px-6 lg:px-8 pb-8 relative z-10 overflow-x-hidden ${
         showHero ? "-mt-8 sm:-mt-12" : "pt-8"
       }`}
     >
