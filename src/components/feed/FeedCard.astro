@@ -12,113 +12,107 @@ interface Props {
 const { post, isLastItem = false } = Astro.props;
 ---
 
-<!-- 使用 -mx-4 负外边距配合 w-[calc(100%+2rem)] 强行通栏，m-0 彻底消除卡片间外边隙 -->
-<article class="dynamic-item m-0 my-0 -mx-4 sm:mx-0 w-[calc(100%+2rem)] sm:w-full border-b border-base-content/10 last:border-b-0">
-  <div class="relative w-full bg-base-100 sm:bg-base-200/40 sm:backdrop-blur-md overflow-hidden shadow-none">
-    
-    <!-- 1. Ins 风格顶部栏：头像缩小收窄 + 姓名与时间戳靠右平行同行 -->
-    <div class="flex items-center justify-between px-4 py-2 sm:py-2.5">
-      <div class="flex items-center space-x-2.5 min-w-0">
-        <!-- 缩小头像 -->
-        <a href={`/post/${post.id}`} class="block flex-shrink-0">
-          <img 
-            src="/avatar.webp" 
-            alt="Channel Avatar" 
-            class="w-7 h-7 rounded-full object-cover ring-1 ring-base-content/10"
-          />
-        </a>
-        <!-- 作者名与时间戳平齐平行 -->
-        <div class="flex items-center space-x-1.5 text-xs sm:text-sm truncate">
-          <a href={`/post/${post.id}`} class="font-bold text-base-content hover:text-primary transition-colors truncate">
-            サンpansir的随笔
-          </a>
-          <span class="text-base-content/40 text-[10px] flex-shrink-0">•</span>
-          <span class="text-base-content/50 text-[11px] font-mono flex-shrink-0">
-            {post.formattedDate}
-          </span>
-        </div>
-      </div>
-
-      <!-- 右侧更多图标 -->
-      <button aria-label="More options" class="text-base-content/50 hover:text-base-content p-1">
-        <i class="ri-more-fill text-lg"></i>
-      </button>
-    </div>
-
-    <!-- 2. 引用回复 (如果有) -->
-    {
-      post.reply && (
-        <div class="px-4 mb-2">
-          <a href={post.reply.url} class="block not-prose no-underline group/reply">
-            <blockquote class="text-xs p-2.5 bg-base-200/70 rounded-lg border-l-2 border-primary group-hover/reply:bg-base-200 transition-colors">
-              <p class="font-bold text-base-content">{post.reply.author}</p>
-              <p class="opacity-70 truncate text-base-content/80">{post.reply.text}</p>
-            </blockquote>
-          </a>
-        </div>
-      )
-    }
-
-    <!-- 3. 文字内容 (保证 set:html 完美输出) -->
-    {
-      post.htmlContent && (
-        <div
-          class="prose prose-sm max-w-none px-4 mb-2 text-base-content/90 text-xs sm:text-sm leading-relaxed"
-          set:html={post.htmlContent}
+<!-- 外层：去掉所有 margin，背景直接设为纯白/纯黑，底部只留极细的一条分割线 -->
+<article class="w-full bg-base-100 border-b border-base-content/10 m-0 p-0 rounded-none shadow-none">
+  
+  <!-- 1. 极致回收的头部：py-1.5 极窄高度，头像 28px(w-7 h-7) 行内与文字严丝合缝 -->
+  <div class="flex items-center justify-between px-3 py-1.5 sm:px-4">
+    <div class="flex items-center space-x-2 min-w-0">
+      <a href={`/post/${post.id}`} class="block flex-shrink-0 leading-none">
+        <img 
+          src="/avatar.webp" 
+          alt="Avatar" 
+          class="w-7 h-7 rounded-full object-cover block m-0 p-0"
         />
-      )
-    }
-
-    <!-- 4. 媒体大图区域 (图片贴紧无缝) -->
-    {
-      post.media && post.media.length > 0 && (
-        <div class="w-full my-1">
-          <MediaGallery media={post.media} postId={post.id} />
-        </div>
-      )
-    }
-
-    <!-- 5. 链接预览 -->
-    {post.linkPreview && (
-      <div class="px-4 my-2">
-        <LinkPreview link={post.linkPreview} />
+      </a>
+      
+      <!-- 名字 + 时间 在同一行 -->
+      <div class="flex items-center space-x-1.5 text-xs sm:text-sm truncate leading-none">
+        <a href={`/post/${post.id}`} class="font-bold text-base-content hover:text-primary transition-colors truncate">
+          サンpansir的随笔
+        </a>
+        <span class="text-base-content/40 text-[10px]">•</span>
+        <span class="text-base-content/50 text-[11px] font-mono">
+          {post.formattedDate}
+        </span>
       </div>
-    )}
-
-    <!-- 6. Ins 风格点赞/交互工具栏 -->
-    <div class="px-4 pt-2 pb-1 flex items-center justify-between">
-      <div class="flex items-center space-x-4">
-        <!-- 点赞按钮组件 -->
-        <div class="relative z-10 flex items-center space-x-1">
-          <LikeButton postId={post.id} client:visible />
-        </div>
-
-        <!-- 转发/分享图标 -->
-        <button aria-label="Share" class="text-base-content hover:text-primary transition-colors">
-          <i class="ri-send-plane-line text-xl sm:text-2xl"></i>
-        </button>
-
-        <!-- 浏览量 -->
-        <div class="flex items-center space-x-1 text-xs text-base-content/50 pl-1">
-          <i class="ri-bar-chart-line text-sm opacity-70"></i>
-          <span>{post.views}</span>
-        </div>
-      </div>
-
-      <!-- 收藏图标 -->
-      <button aria-label="Bookmark" class="text-base-content hover:text-primary transition-colors">
-        <i class="ri-bookmark-line text-xl sm:text-2xl"></i>
-      </button>
     </div>
 
-    <!-- 7. 评论区（作为帖子自然的底部结尾，紧贴下一个帖子） -->
-    <div class="px-4 pb-3 pt-1 border-t border-base-content/5">
-      <Comments
-        identifier={post.id}
-        commentType="telegram"
-        displayMode="compact"
-      />
-    </div>
-
+    <!-- 右侧三点 -->
+    <button aria-label="More options" class="text-base-content/40 hover:text-base-content p-0.5">
+      <i class="ri-more-fill text-base"></i>
+    </button>
   </div>
+
+  <!-- 2. 引用回复 -->
+  {
+    post.reply && (
+      <div class="px-3 sm:px-4 my-1">
+        <a href={post.reply.url} class="block not-prose no-underline group/reply">
+          <blockquote class="text-xs p-2 bg-base-200/70 rounded border-l-2 border-primary">
+            <p class="font-bold text-base-content">{post.reply.author}</p>
+            <p class="opacity-70 truncate text-base-content/80">{post.reply.text}</p>
+          </blockquote>
+        </a>
+      </div>
+    )
+  }
+
+  <!-- 3. 文字内容区 -->
+  {
+    post.htmlContent && (
+      <div
+        class="prose prose-sm max-w-none px-3 sm:px-4 my-1 text-base-content/90 text-xs sm:text-sm leading-relaxed"
+        set:html={post.htmlContent}
+      />
+    )
+  }
+
+  <!-- 4. 媒体图片展示 -->
+  {
+    post.media && post.media.length > 0 && (
+      <div class="w-full my-1">
+        <MediaGallery media={post.media} postId={post.id} />
+      </div>
+    )
+  }
+
+  <!-- 5. 链接预览 -->
+  {post.linkPreview && (
+    <div class="px-3 sm:px-4 my-1">
+      <LinkPreview link={post.linkPreview} />
+    </div>
+  )}
+
+  <!-- 6. 交互栏 -->
+  <div class="px-3 sm:px-4 py-1 flex items-center justify-between">
+    <div class="flex items-center space-x-3.5">
+      <div class="relative z-10 flex items-center">
+        <LikeButton postId={post.id} client:visible />
+      </div>
+
+      <button aria-label="Share" class="text-base-content hover:text-primary transition-colors">
+        <i class="ri-send-plane-line text-lg"></i>
+      </button>
+
+      <div class="flex items-center space-x-1 text-[11px] text-base-content/50">
+        <i class="ri-bar-chart-line text-xs opacity-70"></i>
+        <span>{post.views}</span>
+      </div>
+    </div>
+
+    <button aria-label="Bookmark" class="text-base-content hover:text-primary transition-colors">
+      <i class="ri-bookmark-line text-lg"></i>
+    </button>
+  </div>
+
+  <!-- 7. 评论区（紧贴底部） -->
+  <div class="px-3 sm:px-4 pb-2 pt-1 border-t border-base-content/5">
+    <Comments
+      identifier={post.id}
+      commentType="telegram"
+      displayMode="compact"
+    />
+  </div>
+
 </article>
