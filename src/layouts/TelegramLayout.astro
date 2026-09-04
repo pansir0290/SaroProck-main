@@ -2,9 +2,14 @@
 // src/layouts/TelegramLayout.astro
 ---
 
-<div class="w-full max-w-2xl mx-auto m-0 p-0 flex flex-col space-y-0 gap-0 border-x border-base-content/10 bg-base-100 min-h-screen">
-  <!-- 删掉 Header，避免与全局 Layout 里的 Header 重复 -->
-  <div class="w-full">
+<!-- 
+  关键点：
+  1. w-full: 移动端 100% 强制吃满宽度
+  2. px-0 m-0 p-0: 彻底清空左右 Padding 和 Margin
+  3. border-x-0 sm:border-x: 移动端取消左右边框，只有 sm/lg 大屏才保留左右边框
+-->
+<div class="w-full max-w-2xl mx-auto m-0 p-0 flex flex-col space-y-0 gap-0 border-x-0 sm:border-x border-base-content/10 bg-base-100 min-h-screen">
+  <div class="w-full m-0 p-0">
     <slot />
   </div>
 </div>
