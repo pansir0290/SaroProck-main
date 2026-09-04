@@ -4,7 +4,6 @@ import FuwariProfile from "@components/FuwariProfile.astro";
 import SearchBar from "@components/widgets/SearchBar.astro"; 
 ---
 
-<!-- Google Font 引入类似 Ins 标志的 Grand Hotel 字体（或备用艺术字体） -->
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Grand+Hotel&display=swap');
   .ins-logo-font {
@@ -12,23 +11,24 @@ import SearchBar from "@components/widgets/SearchBar.astro";
   }
 </style>
 
-<header class="w-full bg-base-100 border-b border-base-content/10 sticky top-0 z-50 shadow-sm">
-  <!-- 顶栏：与正文同宽 (max-w-4xl)，居中排列 -->
-  <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between border-b border-base-content/5">
-    
-    <!-- 左侧标题：字体仿照 Instagram Style -->
-    <div class="flex items-center">
+<header class="w-full bg-base-100 border-b border-base-content/10 sticky top-0 z-50 shadow-sm transition-all duration-200">
+  <!-- 顶栏区域：包含标题与右侧搜索框 -->
+  <div class="w-full max-w-2xl mx-auto px-4 h-14 flex items-center justify-between border-b border-base-content/5">
+    <!-- 左侧标题 -->
+    <div class="flex items-center space-x-2">
       <a href="/" class="text-xl sm:text-2xl font-bold tracking-normal ins-logo-font text-base-content hover:opacity-80 transition-opacity">
         サンpansir的随笔
       </a>
     </div>
 
-    <!-- 右侧搜索框：垂直居中靠右 -->
+    <!-- 右侧搜索框 -->
     <div class="w-36 sm:w-48 flex justify-end items-center">
       <SearchBar />
     </div>
   </div>
 
-  <!-- 下层：居中并紧凑对齐的 Ins Highlights 圆球列表 -->
-  <FuwariProfile />
+  <!-- 下层：Ins Highlights 圆球列表 -->
+  <div class="w-full max-w-2xl mx-auto">
+    <FuwariProfile />
+  </div>
 </header>
