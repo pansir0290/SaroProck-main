@@ -12,71 +12,70 @@ interface Props {
 const { post, isLastItem = false } = Astro.props;
 ---
 
-<article class="dynamic-item group my-6">
-  <div class="grid grid-cols-[auto_1fr] gap-3">
-    <!-- 左侧头像与时间轴 -->
-    <div class="flex flex-col items-center">
-      <div class="avatar mb-2">
-        <div
-          class="w-8 h-8 rounded-full ring-1 ring-primary/20 ring-offset-1 ring-offset-base-100 group-hover:ring-primary/40 transition-all duration-300"
-        >
-          <img src="/avatar.webp" alt="Channel Avatar" />
+<article class="dynamic-item my-6">
+  <div
+    class="relative bg-base-200/40 backdrop-blur-md rounded-2xl border border-base-content/10 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
+  >
+    <!-- 1. 顶部栏：头像 + 姓名 + 发布时间（通栏顶部） -->
+    <div class="flex items-center justify-between p-4 pb-2">
+      <div class="flex items-center space-x-3">
+        <div class="avatar">
+          <div class="w-9 h-9 rounded-full ring-1 ring-primary/30 ring-offset-1 ring-offset-base-100">
+            <img src="/avatar.webp" alt="Channel Avatar" />
+          </div>
+        </div>
+        <div>
+          <a href={`/post/${post.id}`} class="font-medium text-sm text-base-content hover:text-primary transition-colors block">
+            サンpansir的随笔
+          </a>
+          <span class="text-[11px] text-base-content/50 font-mono">{post.formattedDate}</span>
         </div>
       </div>
-      {
-        !isLastItem && (
-          <div class="w-0.5 flex-1 bg-primary/20 rounded-full min-h-[1.5rem]" />
-        )
-      }
     </div>
 
-    <!-- 右侧内容主卡片：关键点是移除了 overflow-hidden，允许内容与图片向外延伸 -->
-    <div
-      class="relative transition-all duration-300"
-    >
-      <!-- 头部：作者与时间 -->
-      <div class="flex items-center justify-between mb-2 px-1">
-        <a href={`/post/${post.id}`} class="font-medium text-sm text-base-content hover:text-primary transition-colors">
-          サンpansir的随笔
-        </a>
-        <span class="text-xs text-base-content/50 font-mono">{post.formattedDate}</span>
-      </div>
-
-      <!-- 引用回复 -->
-      {
-        post.reply && (
-          <a
-            href={post.reply.url}
-            class="block not-prose no-underline mb-3 group/reply"
-          >
-            <blockquote class="text-xs p-2.5 bg-base-200/50 backdrop-blur-sm rounded-lg border-l-2 border-primary group-hover/reply:bg-base-200/80 transition-colors">
+    <!-- 2. 引用回复 -->
+    {
+      post.reply && (
+        <div class="px-4 mb-2">
+          <a href={post.reply.url} class="block not-prose no-underline group/reply">
+            <blockquote class="text-xs p-2.5 bg-base-300/40 rounded-lg border-l-2 border-primary group-hover/reply:bg-base-300/70 transition-colors">
               <p class="font-bold text-base-content">{post.reply.author}</p>
-              <p class="opacity-70 truncate text-base-content/80">
-                {post.reply.text}
-              </p>
+              <p class="opacity-70 truncate text-base-content/80">{post.reply.text}</p>
             </blockquote>
           </a>
-        )
-      }
+        </div>
+      )
+    }
 
-      <!-- 文字内容 -->
-      <div
-        class="prose prose-sm max-w-none mb-3 text-base-content/90 text-sm leading-relaxed px-1"
-        set:html={post.htmlContent}
-      />
+    <!-- 3. 文字内容（带两侧内边距） -->
+    {
+      post.htmlContent && (
+        <div
+          class="prose prose-sm max-w-none px-4 mb-3 text-base-content/90 text-sm leading-relaxed"
+          set:html={post.htmlContent}
+        />
+      )
+    }
 
-      <!-- 媒体相册：通透感的核心！直接突破边界 -->
-      <div class="-mx-2 sm:-mx-4 my-3">
-        <MediaGallery media={post.media} postId={post.id} />
+    <!-- 4. 媒体区域（100% 宽度彻底拉满，紧贴外框） -->
+    {
+      post.media && post.media.length > 0 && (
+        <div class="w-full my-2">
+          <MediaGallery media={post.media} postId={post.id} />
+        </div>
+      )
+    }
+
+    <!-- 5. 链接预览 -->
+    {post.linkPreview && (
+      <div class="px-4 my-2">
+        <LinkPreview link={post.linkPreview} />
       </div>
+    )}
 
-      <!-- 链接预览 -->
-      {post.linkPreview && <LinkPreview link={post.linkPreview} />}
-
-      <!-- 底部互动栏 -->
-      <footer
-        class="flex items-center justify-between pt-2 px-1 mt-2 text-xs text-base-content/60"
-      >
+    <!-- 6. 底部互动栏与评论 -->
+    <div class="px-4 pb-3">
+      <footer class="flex items-center justify-between pt-3 border-t border-base-content/10 text-xs text-base-content/60">
         <div class="flex items-center space-x-1">
           <i class="ri-bar-chart-line text-sm opacity-70"></i>
           <span>{post.views}</span>
@@ -86,8 +85,7 @@ const { post, isLastItem = false } = Astro.props;
         </div>
       </footer>
 
-      <!-- 评论区 -->
-      <div class="mt-3 pt-2">
+      <div class="mt-2 pt-2">
         <Comments
           identifier={post.id}
           commentType="telegram"
