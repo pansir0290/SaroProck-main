@@ -12,12 +12,13 @@ interface Props {
 const { post, isLastItem = false } = Astro.props;
 ---
 
-<article class="dynamic-item my-6">
+<!-- 核心修改：使用 relative left-1/2 -translate-x-1/2 w-screen，强行破开父容器 Padding 做到绝对满屏 -->
+<article class="dynamic-item my-6 relative left-1/2 -translate-x-1/2 w-screen sm:static sm:translate-x-0 sm:w-full">
   <div
-    class="relative bg-base-200/40 backdrop-blur-md rounded-2xl border border-base-content/10 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
+    class="relative w-full bg-base-100 sm:bg-base-200/40 sm:backdrop-blur-md sm:rounded-2xl border-y sm:border border-base-content/10 overflow-hidden shadow-none sm:shadow-sm"
   >
-    <!-- 1. 顶部栏：头像 + 姓名 + 发布时间（通栏顶部） -->
-    <div class="flex items-center justify-between p-4 pb-2">
+    <!-- 1. 顶部栏：头像 + 姓名 + 时间 -->
+    <div class="flex items-center justify-between px-4 pt-3.5 pb-2.5">
       <div class="flex items-center space-x-3">
         <div class="avatar">
           <div class="w-9 h-9 rounded-full ring-1 ring-primary/30 ring-offset-1 ring-offset-base-100">
@@ -25,7 +26,7 @@ const { post, isLastItem = false } = Astro.props;
           </div>
         </div>
         <div>
-          <a href={`/post/${post.id}`} class="font-medium text-sm text-base-content hover:text-primary transition-colors block">
+          <a href={`/post/${post.id}`} class="font-semibold text-sm text-base-content hover:text-primary transition-colors block">
             サンpansir的随笔
           </a>
           <span class="text-[11px] text-base-content/50 font-mono">{post.formattedDate}</span>
@@ -38,7 +39,7 @@ const { post, isLastItem = false } = Astro.props;
       post.reply && (
         <div class="px-4 mb-2">
           <a href={post.reply.url} class="block not-prose no-underline group/reply">
-            <blockquote class="text-xs p-2.5 bg-base-300/40 rounded-lg border-l-2 border-primary group-hover/reply:bg-base-300/70 transition-colors">
+            <blockquote class="text-xs p-2.5 bg-base-200/70 rounded-lg border-l-2 border-primary group-hover/reply:bg-base-200 transition-colors">
               <p class="font-bold text-base-content">{post.reply.author}</p>
               <p class="opacity-70 truncate text-base-content/80">{post.reply.text}</p>
             </blockquote>
@@ -47,7 +48,7 @@ const { post, isLastItem = false } = Astro.props;
       )
     }
 
-    <!-- 3. 文字内容（带两侧内边距） -->
+    <!-- 3. 文字内容 -->
     {
       post.htmlContent && (
         <div
@@ -57,7 +58,7 @@ const { post, isLastItem = false } = Astro.props;
       )
     }
 
-    <!-- 4. 媒体区域（100% 宽度彻底拉满，紧贴外框） -->
+    <!-- 4. 媒体大图区域 -->
     {
       post.media && post.media.length > 0 && (
         <div class="w-full my-2">
@@ -73,7 +74,7 @@ const { post, isLastItem = false } = Astro.props;
       </div>
     )}
 
-    <!-- 6. 底部互动栏与评论 -->
+    <!-- 6. 底部互动栏与评论区 -->
     <div class="px-4 pb-3">
       <footer class="flex items-center justify-between pt-3 border-t border-base-content/10 text-xs text-base-content/60">
         <div class="flex items-center space-x-1">
