@@ -1,0 +1,128 @@
+---
+// src/pages/index.astro (全量修复代码)
+import Layout from "@layouts/Layout.astro";
+import TelegramLayout from "@layouts/TelegramLayout.astro";
+import FeedCard from "@components/feed/FeedCard.astro";
+import Pagination from "@components/feed/Pagination.astro";
+import { getChannelFeed } from "@/lib/telegram";
+
+const { searchParams } = Astro.url;
+const before = searchParams.get("before");
+const after = searchParams.get("after");
+const q = searchParams.get("q"); // 搜索参数
+
+const { posts } = await getChannelFeed(Astro, {
+  before: before || undefined,
+  after: after || undefined,
+  q: q || undefined,
+});
+
+const hasPosts = posts.length > 0;
+// "更早" 的光标是当前页面最后一条消息的 ID
+const beforeCursor = hasPosts ? posts[posts.length - 1].id : null;
+// "更新" 的光标是当前页面第一条消息的 ID
+const afterCursor = hasPosts ? posts[0].id : null;
+
+// 是否显示分页？(搜索时不显示)
+const showPagination = !q;
+// 是否显示 "更新" 按钮？(只有在非首页时才显示)
+const showAfter = showPagination && (!!before || !!after);
+// 是否显示 "更早" 按钮？
+const showBefore = showPagination;
+
+let infoMessage = "";
+if (q) {
+  infoMessage = `正在查看关于 <strong class="text-primary">“${q}”</strong> 的搜索结果。`;
+} else if (before) {
+  infoMessage = `正在查看 ID <strong class="text-primary">${before}</strong> 之前的动态。`;
+} else if (after) {
+  infoMessage = `正在查看 ID <strong class="text-primary">${after}</strong> 之后的动态。`;
+}
+---
+
+<Layout title="首页">
+  <TelegramLayout>
+    {
+      infoMessage && (
+        <div role="alert" class="alert rounded-xl text-sm mb-4">
+          <i class="ri-information-line" />
+          <span set:html={infoMessage} />
+          <a href="/" class="btn btn-ghost btn-sm ml-auto">
+            <i class="ri-arrow-go-back-line mr-1" />
+            返回最新
+          </a>
+        </div>
+      )
+    }
+
+    <!-- 列表包裹区：强制内嵌包裹容器零边距 m-0 p-0，彻底消除外层缝隙 -->
+    <div class="flex flex-col m-0 p-0 divide-y-0 space-y-0 gap-0">
+      {
+        posts.length > 0 ? (
+          posts.map((post, index) => (
+            <div 
+              id={post.id} 
+              data-post-id={post.id} 
+              class="scroll-mt-20 m-0 p-0 block w-full leading-none"
+            >
+              <FeedCard post={post} isLastItem={index === posts.length - 1} />
+            </div>
+          ))
+        ) : (
+          <div class="text-center text-base-content/60 py-12">
+            <i class="ri-compass-3-line text-4xl" />
+            <p class="mt-4">没有找到任何动态。</p>
+            {q && <p class="text-xs mt-1">请尝试更换搜索关键词。</p>}
+          </div>
+        )
+      }
+    </div>
+
+    {
+      showPagination && posts.length > 0 && (
+        <Pagination
+          beforeCursor={beforeCursor}
+          afterCursor={afterCursor}
+          showBefore={showBefore}
+        />
+      )
+    }
+  </TelegramLayout>
+</Layout>
+
+<script>
+  // 处理锚点 (#贴号) 的自动平滑滚动与高亮
+  function handleHashHighlight() {
+    const hash = window.location.hash;
+    if (!hash) return;
+
+    const targetId = hash.replace("#", "");
+    if (!targetId) return;
+
+    // 寻找带有对应 ID 的贴号 DOM 节点
+    const targetElement = 
+      document.getElementById(targetId) || 
+      document.querySelector(`[data-post-id="${targetId}"]`);
+
+    if (targetElement) {
+      // 1. 平滑滚动到屏幕中央
+      targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      // 2. 增加视觉高亮引导圈
+      targetElement.classList.add("ring-2", "ring-primary", "transition-all", "duration-300");
+      setTimeout(() => {
+        targetElement.classList.remove("ring-2", "ring-primary");
+      }, 2500);
+    }
+  }
+
+  // 1. 页面加载完成时立刻触发一次检查
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", handleHashHighlight);
+  } else {
+    handleHashHighlight();
+  }
+
+  // 2. 监听 URL 哈希变动（如在同一页连续点击搜索结果）
+  window.addEventListener("hashchange", handleHashHighlight);
+</script>
