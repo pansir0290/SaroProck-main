@@ -80,27 +80,23 @@ const socialImageURL = new URL(image, Astro.site);
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={socialImageURL} />
   </head>
-  <!-- 1. 移除 body 上的 topography 类，保证纯净背景 -->
   <body class="bg-base-100 text-base-content min-h-screen relative selection:bg-primary/20">
 
     <!-- ================================================================= -->
-    <!-- 【当前生效】：顶级高级感 - 弥散光晕背景 (Mesh Gradient Orbs)      -->
+    <!-- 优化后的全局自然衔接光晕（解决了 Hero 与 Feed 之间的断层问题）    -->
     <!-- ================================================================= -->
     <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none transition-colors duration-500">
-      <!-- 左上方柔和紫色/蓝紫色光晕 -->
-      <div class="absolute -top-[10vw] -left-[10vw] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-primary/15 via-secondary/10 to-transparent blur-[120px] opacity-70"></div>
+      <!-- 1. 顶部 Hero 左上方柔和紫色光晕 -->
+      <div class="absolute -top-[10%] -left-[10%] w-[70vw] h-[55vh] rounded-full bg-gradient-to-br from-primary/20 via-purple-500/10 to-transparent blur-[130px] opacity-80"></div>
       
-      <!-- 右侧中部暖色/主色光晕 -->
-      <div class="absolute top-[30%] -right-[10vw] w-[45vw] h-[45vw] rounded-full bg-gradient-to-tl from-accent/12 via-primary/8 to-transparent blur-[130px] opacity-60"></div>
+      <!-- 2. 中间连接层：贯穿中间断层区域的淡粉/暖色弥散，消除生硬的白色横断 -->
+      <div class="absolute top-[20%] right-[5%] w-[60vw] h-[50vh] rounded-full bg-gradient-to-bl from-pink-500/12 via-accent/10 to-transparent blur-[140px] opacity-70"></div>
       
-      <!-- 底部隐约深色/柔和光晕 -->
-      <div class="absolute -bottom-[10vw] left-[15vw] w-[40vw] h-[40vw] rounded-full bg-base-content/5 blur-[100px] opacity-40"></div>
+      <!-- 3. 下部列表区域：持续提供背景底色反差 -->
+      <div class="absolute top-[55%] -left-[10%] w-[65vw] h-[50vh] rounded-full bg-gradient-to-tr from-primary/10 via-indigo-500/8 to-transparent blur-[150px] opacity-60"></div>
     </div>
 
-    <!-- ================================================================= -->
-    <!-- 【随时还原备用】：如果你想切回原本的波纹背景，只需解开下面这段注释， -->
-    <!-- 并把上面的 <div class="fixed inset-0 ..."> 删掉或注释掉即可！        -->
-    <!-- ================================================================= -->
+    <!-- 【备用还原】：波纹等高线背景 -->
     <!--
     <div class="fixed inset-0 -z-10 pointer-events-none topography opacity-30"></div>
     -->
@@ -111,7 +107,7 @@ const socialImageURL = new URL(image, Astro.site);
 
     <div
       id="main-content-grid"
-      class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10"
+      class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 relative z-10"
     >
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <main class="lg:col-span-3 min-h-[60vh]">
