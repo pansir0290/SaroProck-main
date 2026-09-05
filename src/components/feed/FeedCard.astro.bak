@@ -1,118 +1,170 @@
 ---
-import type { TelegramPost } from "@/types";
-import MediaGallery from "./MediaGallery.astro";
-import LinkPreview from "./LinkPreview.astro";
-import Comments from "@components/comments/Comments.astro";
-import LikeButton from "./LikeButton.tsx";
+import type { MediaFile } from "@/types";
 
 interface Props {
-  post: TelegramPost;
-  isLastItem?: boolean;
+  media?: MediaFile[];
+  postId?: string;
 }
-const { post, isLastItem = false } = Astro.props;
+
+const { media, postId } = Astro.props;
+
+if (!media || media.length === 0) return null;
+
+const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)}`;
 ---
 
-<!-- 外层：干掉顶部所有边框，仅保留底部分隔线；移除强行拉开的外边距 -->
-<article class="w-full bg-base-100 border-t-0 border-b border-base-content/10 m-0 p-0 rounded-none shadow-none">
-  
-  <!-- 1. 头部：头像 + 名字 + 时间（增加 pt-2 pb-1.5 保障头部充分露显） -->
-  <div class="flex items-center justify-between px-3 pt-2 pb-1.5 sm:px-4">
-    <div class="flex items-center space-x-2 min-w-0">
-      <a href={`/post/${post.id}`} class="block flex-shrink-0 leading-none">
-        <img 
-          src="/avatar.webp" 
-          alt="Avatar" 
-          class="w-7 h-7 rounded-full object-cover block m-0 p-0"
+<div class="relative group w-full overflow-hidden block m-0 p-0 leading-none">
+  <!-- 滚动轨道 -->
+  <div
+    id={uniqueId}
+    class="flex overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth w-full m-0 p-0 leading-none border-none transform-gpu"
+  >
+    {
+      media.map((item, index) => (
+        <div 
+          class="w-full flex-shrink-0 snap-center flex items-center justify-center relative aspect-[4/5] m-0 p-0 overflow-hidden border-none outline-none bg-base-100"
+        >
+          {item.type === "image" ? (
+            <img
+              src={item.url}
+              alt={item.alt || `Media ${index + 1}`}
+              class="w-full h-full object-cover select-none block m-0 p-0 border-0 outline-none scale-[1.015] transform-gpu transition-transform duration-200"
+              loading="lazy"
+            />
+          ) : (
+            <video
+              src={item.url}
+              controls
+              preload="metadata"
+              playsinline
+              class="w-full h-full object-cover block m-0 p-0 border-0 outline-none scale-[1.015] transform-gpu"
+            />
+          )}
+        </div>
+      ))
+    }
+  </div>
+
+  <!-- 1. 右上角悬浮胶囊页码（如 1/5） -->
+  {
+    media.length > 1 && (
+      <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white text-[11px] font-mono px-2.5 py-1 rounded-full z-10 pointer-events-none border border-white/10 shadow-md">
+        <span class="current-counter">1</span> / {media.length}
+      </div>
+    )
+  }
+
+  <!-- 2. PC 端左右悬浮箭头 -->
+  {
+    media.length > 1 && (
+      <>
+        <button
+          type="button"
+          class="prev-btn hidden group-hover:flex absolute left-3 top-1/2 -translate-y-1/2 btn btn-circle btn-sm bg-black/50 hover:bg-black/80 text-white border-none backdrop-blur-sm transition-all z-10"
+          aria-label="上一张"
+          data-target={uniqueId}
+        >
+          <i class="ri-arrow-left-s-line text-lg" />
+        </button>
+        <button
+          type="button"
+          class="next-btn hidden group-hover:flex absolute right-3 top-1/2 -translate-y-1/2 btn btn-circle btn-sm bg-black/50 hover:bg-black/80 text-white border-none backdrop-blur-sm transition-all z-10"
+          aria-label="下一张"
+          data-target={uniqueId}
+        >
+          <i class="ri-arrow-right-s-line text-lg" />
+        </button>
+      </>
+    )
+  }
+</div>
+
+<!-- 3. Ins 风格：底部动态圆点指示器（Dots Indicator） -->
+{
+  media.length > 1 && (
+    <div class="w-full flex items-center justify-center space-x-1.5 py-2 bg-base-100 border-none select-none">
+      {media.map((_, idx) => (
+        <span
+          class={`gallery-dot dot-${uniqueId} inline-block rounded-full transition-all duration-300 ${
+            idx === 0
+              ? "w-1.5 h-1.5 bg-primary scale-125"
+              : "w-1.5 h-1.5 bg-base-content/20"
+          }`}
+          data-index={idx}
         />
-      </a>
-      
-      <!-- 名字 + 时间 -->
-      <div class="flex items-center space-x-1.5 text-xs sm:text-sm truncate leading-none">
-        <a href={`/post/${post.id}`} class="font-bold text-base-content hover:text-primary transition-colors truncate">
-          サンpansir的随笔
-        </a>
-        <span class="text-base-content/40 text-[10px]">•</span>
-        <span class="text-base-content/50 text-[11px] font-mono">
-          {post.formattedDate}
-        </span>
-      </div>
+      ))}
     </div>
+  )
+}
 
-    <!-- 右侧三点 -->
-    <button aria-label="More options" class="text-base-content/40 hover:text-base-content p-0.5">
-      <i class="ri-more-fill text-base"></i>
-    </button>
-  </div>
+<script>
+  function initBleedGallery() {
+    // 左右按钮点击切换
+    document.querySelectorAll(".prev-btn, .next-btn").forEach((btn) => {
+      if (btn.hasAttribute("data-inited")) return;
+      btn.setAttribute("data-inited", "true");
 
-  <!-- 2. 引用回复 -->
-  {
-    post.reply && (
-      <div class="px-3 sm:px-4 my-1">
-        <a href={post.reply.url} class="block not-prose no-underline group/reply">
-          <blockquote class="text-xs p-2 bg-base-200/70 rounded border-l-2 border-primary">
-            <p class="font-bold text-base-content">{post.reply.author}</p>
-            <p class="opacity-70 truncate text-base-content/80">{post.reply.text}</p>
-          </blockquote>
-        </a>
-      </div>
-    )
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const targetId = btn.getAttribute("data-target");
+        if (!targetId) return;
+        const container = document.getElementById(targetId);
+        if (!container) return;
+
+        const scrollAmount = container.clientWidth;
+        const isNext = btn.classList.contains("next-btn");
+
+        container.scrollBy({
+          left: isNext ? scrollAmount : -scrollAmount,
+          behavior: "smooth",
+        });
+      });
+    });
+
+    // 监听滑动：同时更新胶囊数字 和 底部小圆点高亮状态
+    document.querySelectorAll('[id^="gallery-"]').forEach((container) => {
+      if (container.hasAttribute("data-inited")) return;
+      container.setAttribute("data-inited", "true");
+
+      const targetId = container.id;
+      const counter = container.parentElement?.querySelector(".current-counter");
+      const dots = document.querySelectorAll(`.dot-${targetId}`);
+
+      container.addEventListener("scroll", () => {
+        const width = container.clientWidth;
+        if (width <= 0) return;
+        
+        const index = Math.round(container.scrollLeft / width);
+        
+        // 更新数字页码
+        if (counter) {
+          counter.textContent = (index + 1).toString();
+        }
+
+        // 更新圆点高亮状态
+        dots.forEach((dot, idx) => {
+          if (idx === index) {
+            dot.className = `gallery-dot dot-${targetId} inline-block w-1.5 h-1.5 rounded-full bg-primary scale-125 transition-all duration-300`;
+          } else {
+            dot.className = `gallery-dot dot-${targetId} inline-block w-1.5 h-1.5 rounded-full bg-base-content/20 transition-all duration-300`;
+          }
+        });
+      });
+    });
   }
 
-  <!-- 3. 文字内容区 -->
-  {
-    post.htmlContent && (
-      <div
-        class="prose prose-sm max-w-none px-3 sm:px-4 my-1 text-base-content/90 text-xs sm:text-sm leading-relaxed"
-        set:html={post.htmlContent}
-      />
-    )
+  document.addEventListener("DOMContentLoaded", initBleedGallery);
+  document.addEventListener("astro:page-load", initBleedGallery);
+</script>
+
+<style>
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
-
-  <!-- 4. 媒体图片展示 -->
-  {
-    post.media && post.media.length > 0 && (
-      <div class="w-full my-1">
-        <MediaGallery media={post.media} postId={post.id} />
-      </div>
-    )
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
-
-  <!-- 5. 链接预览 -->
-  {post.linkPreview && (
-    <div class="px-3 sm:px-4 my-1">
-      <LinkPreview link={post.linkPreview} />
-    </div>
-  )}
-
-  <!-- 6. 交互栏 -->
-  <div class="px-3 sm:px-4 py-1.5 flex items-center justify-between">
-    <div class="flex items-center space-x-3.5">
-      <div class="relative z-10 flex items-center">
-        <LikeButton postId={post.id} client:visible />
-      </div>
-
-      <button aria-label="Share" class="text-base-content hover:text-primary transition-colors">
-        <i class="ri-send-plane-line text-lg"></i>
-      </button>
-
-      <div class="flex items-center space-x-1 text-[11px] text-base-content/50">
-        <i class="ri-bar-chart-line text-xs opacity-70"></i>
-        <span>{post.views}</span>
-      </div>
-    </div>
-
-    <button aria-label="Bookmark" class="text-base-content hover:text-primary transition-colors">
-      <i class="ri-bookmark-line text-lg"></i>
-    </button>
-  </div>
-
-  <!-- 7. 评论区：移除上边框 border-t，避免在无文字图片帖中形成细横杠分隔 -->
-  <div class="px-3 sm:px-4 pb-2 pt-0.5">
-    <Comments
-      identifier={post.id}
-      commentType="telegram"
-      displayMode="compact"
-    />
-  </div>
-
-</article>
+</style>
