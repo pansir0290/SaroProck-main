@@ -1,4 +1,3 @@
-</script>
 ---
 // src/pages/index.astro
 import Layout from "@layouts/Layout.astro";
@@ -19,7 +18,7 @@ const { posts } = await getChannelFeed(Astro, {
 
 const hasPosts = posts && posts.length > 0;
 
-// 🛡️ 核心防呆逻辑：如果带了 before/after 游标参数访问且查不到动态，说明触底或参数失效，自动跳转回首页
+// 🛡️ 核心防呆逻辑：如果带了 before/after 游标参数访问且查不到动态，自动跳转回首页
 if (!hasPosts && (before || after) && !q) {
   return Astro.redirect("/", 302);
 }
@@ -50,7 +49,6 @@ if (q) {
       )
     }
 
-    <!-- 零缝隙包裹层：无限滚动挂载目标容器 -->
     <div id="feed-container" class="flex flex-col m-0 p-0 gap-0 space-y-0">
       {
         hasPosts ? (
@@ -73,7 +71,6 @@ if (q) {
       }
     </div>
 
-    <!-- 提前预加载触发哨兵元素 -->
     {
       enableInfiniteScroll && hasPosts && beforeCursor && (
         <div
@@ -89,7 +86,7 @@ if (q) {
   </TelegramLayout>
 </Layout>
 
-<script>
+<script lang="ts">
   let isLoading = false;
 
   function initInfiniteScroll() {
@@ -147,6 +144,7 @@ if (q) {
         }
       },
       {
+        // 🚀 预加载距离调大到 2500px，提前 3~4 个屏的高度抓取数据，不再卡顿转圈
         rootMargin: "0px 0px 2500px 0px",
         threshold: 0.01,
       }
