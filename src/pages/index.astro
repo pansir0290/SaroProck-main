@@ -109,7 +109,6 @@ if (q) {
           }, 300);
 
           try {
-            // 🚀 带上 &ajax=1 通行证，其余保持你原版逻辑
             const nextUrl = `/?before=${currentBefore}&ajax=1`;
             const response = await fetch(nextUrl);
             const htmlText = await response.text();
@@ -117,7 +116,7 @@ if (q) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlText, "text/html");
 
-            // 提取新帖子节点（完全使用你原版的精准选择器）
+            // 提取新帖子节点
             const newPosts = doc.querySelectorAll("#feed-container > [data-post-id]");
             const newTrigger = doc.getElementById("infinite-scroll-trigger");
 
@@ -125,6 +124,11 @@ if (q) {
               newPosts.forEach((node) => {
                 container.appendChild(node.cloneNode(true));
               });
+
+              // 🚀 核心修复：新节点插入后，立即重新初始化新卡片的图集滑动监听！
+              if (typeof (window as any).initBleedGallery === "function") {
+                (window as any).initBleedGallery();
+              }
 
               if (newTrigger) {
                 const newBefore = newTrigger.getAttribute("data-before-cursor");
@@ -143,7 +147,6 @@ if (q) {
             clearTimeout(loadingTimer);
             trigger.classList.add("opacity-0");
             isLoading = false;
-            // 彻底去除多余的 unobserve/observe，恢复原生自然触发！
           }
         }
       },
