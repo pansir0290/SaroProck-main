@@ -32,13 +32,22 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
               loading="lazy"
             />
           ) : (
-            <video
-              src={item.url}
-              controls
-              preload="metadata"
-              playsinline
-              class="w-full h-full object-cover block m-0 p-0 border-0 outline-none scale-[1.015] transform-gpu"
-            />
+            <!-- Ins 风格视频：去掉 controls，开启静音循环自动播放，绑定点击事件 -->
+            <div class="relative w-full h-full group/video overflow-hidden cursor-pointer flex items-center justify-center">
+              <video
+                src={item.url}
+                autoplay
+                muted
+                loop
+                playsinline
+                preload="metadata"
+                class="reel-video w-full h-full object-cover block m-0 p-0 border-0 outline-none scale-[1.015] transform-gpu"
+              />
+              <!-- 视频悬浮微弱播放图标指示器 -->
+              <div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 group-hover/video:opacity-100 transition-opacity duration-200">
+                <i class="ri-play-circle-line text-white/80 text-4xl shadow-lg"></i>
+              </div>
+            </div>
           )}
         </div>
       ))
@@ -129,7 +138,6 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
       container.setAttribute("data-inited", "true");
 
       const targetId = container.id;
-      // 从包裹层或者祖先 article 节点寻找配套的数字与圆点，防止跨节点寻找失效
       const article = container.closest("article") || container.parentElement?.parentElement;
       const counter = article ? article.querySelector(".current-counter") : null;
       const dots = article ? article.querySelectorAll(`.dot-${targetId}`) : document.querySelectorAll(`.dot-${targetId}`);
@@ -140,12 +148,10 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
         
         const index = Math.round(container.scrollLeft / width);
         
-        // 更新数字页码
         if (counter) {
           counter.textContent = (index + 1).toString();
         }
 
-        // 更新圆点高亮状态
         dots.forEach((dot, idx) => {
           if (idx === index) {
             dot.className = `gallery-dot dot-${targetId} inline-block w-1.5 h-1.5 rounded-full bg-primary scale-125 transition-all duration-300`;
@@ -157,7 +163,6 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
     });
   }
 
-  // 挂载至全局，方便 DOM 追加后手动调用
   (window as any).initBleedGallery = initBleedGallery;
 
   document.addEventListener("DOMContentLoaded", initBleedGallery);
