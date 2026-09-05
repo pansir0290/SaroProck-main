@@ -1,3 +1,4 @@
+</script>
 ---
 // src/pages/index.astro
 import Layout from "@layouts/Layout.astro";
@@ -17,6 +18,12 @@ const { posts } = await getChannelFeed(Astro, {
 });
 
 const hasPosts = posts && posts.length > 0;
+
+// 🛡️ 核心防呆逻辑：如果带了 before/after 游标参数访问且查不到动态，说明触底或参数失效，自动跳转回首页
+if (!hasPosts && (before || after) && !q) {
+  return Astro.redirect("/", 302);
+}
+
 const beforeCursor = hasPosts ? posts[posts.length - 1].id : null;
 
 // 搜索状态下关闭无限滚动，正常流模式下开启
@@ -127,8 +134,6 @@ if (q) {
               } else {
                 showEndState(trigger, observer);
               }
-
-              // 💡 关键修改：取消地址栏改变，保证无论何时刷新都在顶级首页！
             } else {
               showEndState(trigger, observer);
             }
