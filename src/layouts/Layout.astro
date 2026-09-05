@@ -127,8 +127,36 @@ const socialImageURL = new URL(image, Astro.site);
     />
 
     <BackToTop />
+
+    <!-- 全局 Ins 沉浸式视频全屏 Overlay -->
+    <div 
+      id="reel-fullscreen-modal" 
+      class="fixed inset-0 z-[9999] bg-black hidden flex-col justify-center items-center select-none touch-none"
+    >
+      <!-- 右上角关闭按钮 -->
+      <button 
+        id="close-reel-btn" 
+        type="button" 
+        class="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center text-2xl backdrop-blur-md active:scale-95 transition-transform"
+        aria-label="关闭视频"
+      >
+        <i class="ri-close-line"></i>
+      </button>
+
+      <!-- 点击反馈图标（播放 / 暂停 渐隐动画） -->
+      <div id="reel-status-icon" class="pointer-events-none absolute z-20 opacity-0 transition-opacity duration-300 transform scale-150">
+        <i id="reel-status-i" class="ri-pause-circle-fill text-white/80 text-6xl shadow-2xl"></i>
+      </div>
+
+      <!-- 全屏视频承载容器 -->
+      <div id="reel-modal-wrapper" class="w-full h-full flex items-center justify-center relative overflow-hidden">
+        <!-- 视频会被节点置换动态移入这里 -->
+      </div>
+    </div>
+
     <script is:inline>
       document.addEventListener("DOMContentLoaded", () => {
+        // 1. 代码块复制逻辑
         document.querySelectorAll(".btn-copy").forEach((button) => {
           button.addEventListener("click", async () => {
             const codeBlock = button.closest(".saro-code");
@@ -154,7 +182,113 @@ const socialImageURL = new URL(image, Astro.site);
             }
           });
         });
+
+        // 2. Ins 沉浸式视频播放控制器初始化
+        initInsVideoController();
       });
+
+      function initInsVideoController() {
+        const modal = document.getElementById("reel-fullscreen-modal");
+        const wrapper = document.getElementById("reel-modal-wrapper");
+        const closeBtn = document.getElementById("close-reel-btn");
+        const statusIcon = document.getElementById("reel-status-icon");
+        const statusI = document.getElementById("reel-status-i");
+
+        if (!modal || !wrapper || !closeBtn) return;
+
+        let isFullscreen = false;
+        let currentVideo = null;
+        let originalParent = null;
+        let touchStartY = 0;
+
+        function showStatusFeedback(isPause) {
+          if (!statusIcon || !statusI) return;
+          statusI.className = isPause 
+            ? "ri-pause-circle-fill text-white/80 text-6xl shadow-2xl" 
+            : "ri-play-circle-fill text-white/80 text-6xl shadow-2xl";
+          statusIcon.classList.remove("opacity-0");
+          setTimeout(() => {
+            statusIcon.classList.add("opacity-0");
+          }, 400);
+        }
+
+        function openFullscreen(video) {
+          if (isFullscreen) return;
+
+          isFullscreen = true;
+          currentVideo = video;
+          originalParent = video.parentElement;
+
+          wrapper.appendChild(video);
+          video.classList.remove("object-cover");
+          video.classList.add("object-contain", "w-full", "h-full");
+          video.muted = false;
+          video.play().catch(() => {});
+
+          modal.classList.remove("hidden");
+          modal.classList.add("flex");
+
+          history.pushState({ reelFullscreen: true }, "");
+        }
+
+        function exitFullscreen() {
+          if (!isFullscreen || !currentVideo || !originalParent) return;
+
+          modal.classList.add("hidden");
+          modal.classList.remove("flex");
+
+          originalParent.appendChild(currentVideo);
+          currentVideo.classList.remove("object-contain");
+          currentVideo.classList.add("object-cover");
+          currentVideo.muted = true;
+          currentVideo.play().catch(() => {});
+
+          isFullscreen = false;
+          currentVideo = null;
+          originalParent = null;
+        }
+
+        document.addEventListener("click", (e) => {
+          const target = e.target;
+          if (target && target.classList.contains("reel-video")) {
+            const video = target;
+            if (!isFullscreen) {
+              openFullscreen(video);
+            } else {
+              if (video.paused) {
+                video.play();
+                showStatusFeedback(false);
+              } else {
+                video.pause();
+                showStatusFeedback(true);
+              }
+            }
+          }
+        });
+
+        closeBtn.addEventListener("click", () => {
+          if (isFullscreen) {
+            history.back();
+          }
+        });
+
+        window.addEventListener("popstate", () => {
+          if (isFullscreen) {
+            exitFullscreen();
+          }
+        });
+
+        modal.addEventListener("touchstart", (e) => {
+          touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        modal.addEventListener("touchend", (e) => {
+          const touchEndY = e.changedTouches[0].clientY;
+          if (touchEndY - touchStartY > 100 && isFullscreen) {
+            history.back();
+          }
+        }, { passive: true });
+      }
     </script>
   </body>
 </html>
