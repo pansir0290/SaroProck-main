@@ -8,6 +8,9 @@ function getEnv(Astro: any, name: string): string | undefined {
   return import.meta.env[name] ?? Astro.locals?.runtime?.env?.[name];
 }
 
+/**
+ * 获取频道信息和动态列表（支持自动分页凑满指定数量）
+ */
 export async function getChannelFeed(
   Astro: AstroGlobal,
   options: { before?: string; after?: string; q?: string } = {},
@@ -18,6 +21,7 @@ export async function getChannelFeed(
 
   let posts: TelegramPost[] = [];
 
+  // 解析第一轮数据
   $(".tgme_channel_history .tgme_widget_message_wrap").each((_, wrap) => {
     const postElement = $(wrap).find(".tgme_widget_message").get(0);
     if (postElement) {
@@ -26,33 +30,42 @@ export async function getChannelFeed(
     }
   });
 
-  // 💡 重点改进：如果当前获取到的 Ins 卡片少于 8 条（且不在搜索状态下）
-  // 自动用最旧一条帖子的 ID 向 Telegram 多拿一次上一页的历史数据凑数
-  const TARGET_COUNT = 8; // 你希望首页最少展示的卡片数量
-  if (posts.length < TARGET_COUNT && !options.q) {
+  // 💡 目标条数设为 12 条
+  const TARGET_COUNT = 12;
+  let fetchRounds = 0;
+  const MAX_ROUNDS = 2; // 最多向历史记录额外追查 2 轮，兼顾加载速度与安全
+
+  // 如果解析出来的 Ins 卡片不足 12 条（且不处于搜索状态下），自动补全
+  while (posts.length < TARGET_COUNT && fetchRounds < MAX_ROUNDS && !options.q) {
+    fetchRounds++;
+
+    // 拿到当前最旧一条帖子的 ID 作为向前追查的游标
     const oldestPostId = posts[0]?.id;
-    if (oldestPostId) {
-      const extraHtml = await fetchTelegramHtml(Astro, {
-        ...options,
-        before: oldestPostId,
-      });
-      const $extra = cheerio.load(extraHtml);
-      const extraPosts: TelegramPost[] = [];
+    if (!oldestPostId) break;
 
-      $extra(".tgme_channel_history .tgme_widget_message_wrap").each((_, wrap) => {
-        const postElement = $extra(wrap).find(".tgme_widget_message").get(0);
-        if (postElement) {
-          const parsed = parsePost(postElement, $extra, channel);
-          if (parsed) extraPosts.push(parsed);
-        }
-      });
+    const extraHtml = await fetchTelegramHtml(Astro, {
+      ...options,
+      before: oldestPostId,
+    });
+    const $extra = cheerio.load(extraHtml);
+    const extraPosts: TelegramPost[] = [];
 
-      // 拼接并去重
-      const combined = [...extraPosts, ...posts];
-      const uniqueMap = new Map();
-      combined.forEach((p) => uniqueMap.set(p.id, p));
-      posts = Array.from(uniqueMap.values());
-    }
+    $extra(".tgme_channel_history .tgme_widget_message_wrap").each((_, wrap) => {
+      const postElement = $extra(wrap).find(".tgme_widget_message").get(0);
+      if (postElement) {
+        const parsed = parsePost(postElement, $extra, channel);
+        if (parsed) extraPosts.push(parsed);
+      }
+    });
+
+    // 如果追查不到新数据，直接跳出
+    if (extraPosts.length === 0) break;
+
+    // 拼接新旧数据并按 post.id 去重
+    const combined = [...extraPosts, ...posts];
+    const uniqueMap = new Map<string, TelegramPost>();
+    combined.forEach((p) => uniqueMap.set(p.id, p));
+    posts = Array.from(uniqueMap.values());
   }
 
   return {
@@ -65,6 +78,9 @@ export async function getChannelFeed(
   };
 }
 
+/**
+ * 根据 ID 获取单条动态
+ */
 export async function getPostById(
   Astro: AstroGlobal,
   id: string,
