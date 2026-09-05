@@ -22,7 +22,6 @@ const beforeCursor = hasPosts ? posts[posts.length - 1].id : null;
 // 搜索状态下关闭无限滚动，正常流模式下开启
 const enableInfiniteScroll = !q;
 
-// 💡 彻底抛弃 before/after 的提示框，只保留搜索关键词提示
 let infoMessage = "";
 if (q) {
   infoMessage = `正在查看关于 <strong class="text-primary">“${q}”</strong> 的搜索结果。`;
@@ -111,7 +110,8 @@ if (q) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlText, "text/html");
 
-            const newPosts = doc.querySelectorAll("#feed-container > *");
+            // 提取新帖子节点
+            const newPosts = doc.querySelectorAll("#feed-container > [data-post-id]");
             const newTrigger = doc.getElementById("infinite-scroll-trigger");
 
             if (newPosts.length > 0) {
@@ -125,15 +125,12 @@ if (q) {
                   trigger.setAttribute("data-before-cursor", newBefore);
                 }
               } else {
-                trigger.remove();
-                observer.disconnect();
+                showEndState(trigger, observer);
               }
 
-              // 💡 仅更新 history 记录，不弹出任何强提醒
-              window.history.replaceState(null, "", nextUrl);
+              // 💡 关键修改：取消地址栏改变，保证无论何时刷新都在顶级首页！
             } else {
-              trigger.remove();
-              observer.disconnect();
+              showEndState(trigger, observer);
             }
           } catch (error) {
             console.error("加载新动态失败:", error);
@@ -151,6 +148,17 @@ if (q) {
     );
 
     observer.observe(trigger);
+  }
+
+  // 到底部时的优雅提示
+  function showEndState(trigger: HTMLElement, observer: IntersectionObserver) {
+    trigger.innerHTML = `
+      <div class="text-xs text-base-content/40 py-4">
+        <span>🎉 已经到底啦，共展现了所有 Ins 动态</span>
+      </div>
+    `;
+    trigger.classList.remove("opacity-0");
+    observer.disconnect();
   }
 
   function handleHashHighlight() {
