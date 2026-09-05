@@ -18,9 +18,13 @@ const { posts } = await getChannelFeed(Astro, {
 
 const hasPosts = posts && posts.length > 0;
 
-// 🛡️ 核心防呆逻辑：如果带了 before/after 游标参数访问且查不到动态，自动跳转回首页
-if (!hasPosts && (before || after) && !q) {
-  return Astro.redirect("/", 302);
+// 🛡️ 核心防呆逻辑升级：
+// 如果带了 before 或 after 游标参数访问（非搜索状态），且查出来的帖子为空或只剩 1 条（到达底部边界/无效游标）
+// 直接 302 重定向返回干净的首页 /
+if ((before || after) && !q) {
+  if (!hasPosts || posts.length <= 1) {
+    return Astro.redirect("/", 302);
+  }
 }
 
 const beforeCursor = hasPosts ? posts[posts.length - 1].id : null;
@@ -144,7 +148,7 @@ if (q) {
         }
       },
       {
-        // 🚀 预加载距离调大到 2500px，提前 3~4 个屏的高度抓取数据，不再卡顿转圈
+        // 🚀 预加载距离保留为 2500px，提前 3~4 个屏的高度抓取数据
         rootMargin: "0px 0px 2500px 0px",
         threshold: 0.01,
       }
