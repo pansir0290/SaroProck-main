@@ -22,13 +22,10 @@ const beforeCursor = hasPosts ? posts[posts.length - 1].id : null;
 // 搜索状态下关闭无限滚动，正常流模式下开启
 const enableInfiniteScroll = !q;
 
+// 💡 彻底抛弃 before/after 的提示框，只保留搜索关键词提示
 let infoMessage = "";
 if (q) {
   infoMessage = `正在查看关于 <strong class="text-primary">“${q}”</strong> 的搜索结果。`;
-} else if (before) {
-  infoMessage = `正在查看 ID <strong class="text-primary">${before}</strong> 之前的动态。`;
-} else if (after) {
-  infoMessage = `正在查看 ID <strong class="text-primary">${after}</strong> 之后的动态。`;
 }
 ---
 
@@ -70,7 +67,7 @@ if (q) {
       }
     </div>
 
-    <!-- 💡 提前预加载触发哨兵元素（Sentinel） -->
+    <!-- 提前预加载触发哨兵元素 -->
     {
       enableInfiniteScroll && hasPosts && beforeCursor && (
         <div
@@ -94,7 +91,6 @@ if (q) {
     const container = document.getElementById("feed-container");
     if (!trigger || !container) return;
 
-    // 创建交叉观察器，设置 rootMargin 提前 1000px 预加载！
     const observer = new IntersectionObserver(
       async (entries) => {
         const entry = entries[0];
@@ -102,7 +98,7 @@ if (q) {
 
         if (entry.isIntersecting && !isLoading && currentBefore) {
           isLoading = true;
-          // 只有在加载确实较慢（> 300ms）时才淡出提示组件，平时静默预加载
+          
           const loadingTimer = setTimeout(() => {
             trigger.classList.remove("opacity-0");
           }, 300);
@@ -115,7 +111,6 @@ if (q) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlText, "text/html");
 
-            // 提取新帖子节点
             const newPosts = doc.querySelectorAll("#feed-container > *");
             const newTrigger = doc.getElementById("infinite-scroll-trigger");
 
@@ -124,19 +119,17 @@ if (q) {
                 container.appendChild(node.cloneNode(true));
               });
 
-              // 更新游标 cursor 与 地址栏 URL
               if (newTrigger) {
                 const newBefore = newTrigger.getAttribute("data-before-cursor");
                 if (newBefore) {
                   trigger.setAttribute("data-before-cursor", newBefore);
                 }
               } else {
-                // 没有更多数据了，销毁 Trigger
                 trigger.remove();
                 observer.disconnect();
               }
 
-              // 静默更替地址栏游标
+              // 💡 仅更新 history 记录，不弹出任何强提醒
               window.history.replaceState(null, "", nextUrl);
             } else {
               trigger.remove();
@@ -152,7 +145,6 @@ if (q) {
         }
       },
       {
-        // 🚀 核心黑科技：距离底部还有 1000px（约 1.5 个全屏高度）时就提前在后台偷偷加载！
         rootMargin: "0px 0px 1000px 0px",
         threshold: 0.01,
       }
