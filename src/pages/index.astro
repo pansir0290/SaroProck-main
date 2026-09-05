@@ -10,6 +10,16 @@ const before = searchParams.get("before");
 const after = searchParams.get("after");
 const q = searchParams.get("q");
 
+// 💡 检查是否是前端无限滚动发起的后台 fetch 请求
+const isFetch = Astro.request.headers.get("sec-fetch-dest") === "empty" || 
+                Astro.request.headers.get("x-requested-with") === "XMLHttpRequest";
+
+// 🛡️ 核心防呆：如果用户直接在浏览器地址栏访问带 before/after 的 URL（非后台 fetch，非搜索）
+// 无论有无数据，直接无条件 302 重定向返回纯净首页！
+if ((before || after) && !q && !isFetch) {
+  return Astro.redirect("/", 302);
+}
+
 const { posts } = await getChannelFeed(Astro, {
   before: before || undefined,
   after: after || undefined,
@@ -17,16 +27,6 @@ const { posts } = await getChannelFeed(Astro, {
 });
 
 const hasPosts = posts && posts.length > 0;
-
-// 🛡️ 核心防呆逻辑升级：
-// 如果带了 before 或 after 游标参数访问（非搜索状态），且查出来的帖子为空或只剩 1 条（到达底部边界/无效游标）
-// 直接 302 重定向返回干净的首页 /
-if ((before || after) && !q) {
-  if (!hasPosts || posts.length <= 1) {
-    return Astro.redirect("/", 302);
-  }
-}
-
 const beforeCursor = hasPosts ? posts[posts.length - 1].id : null;
 
 // 搜索状态下关闭无限滚动，正常流模式下开启
@@ -112,7 +112,9 @@ if (q) {
 
           try {
             const nextUrl = `/?before=${currentBefore}`;
-            const response = await fetch(nextUrl);
+            const response = await fetch(nextUrl, {
+              headers: { "X-Requested-With": "XMLHttpRequest" }
+            });
             const htmlText = await response.text();
 
             const parser = new DOMParser();
@@ -148,7 +150,7 @@ if (q) {
         }
       },
       {
-        // 🚀 预加载距离保留为 2500px，提前 3~4 个屏的高度抓取数据
+        // 🚀 预加载距离 2500px，提前多屏后台默默抓取
         rootMargin: "0px 0px 2500px 0px",
         threshold: 0.01,
       }
