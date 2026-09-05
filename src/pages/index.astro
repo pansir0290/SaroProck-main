@@ -13,7 +13,7 @@ const isAjax = searchParams.get("ajax") === "1"; // 🔑 识别后台无限滚�
 
 // 🛡️ 终极防呆重定向：
 // 只要 URL 带有 before 或 after 参数，且【不是】后台 AJAX 抓取请求，且【不是】搜索场景
-// 无论是 ID 48、ID 1 还是任何参数，全部无条件 302 跳转回干净首页 /
+// 无论什么 ID 参数，全部无条件 302 跳转回干净首页 /
 if ((before || after) && !q && !isAjax) {
   return Astro.redirect("/", 302);
 }
@@ -57,7 +57,7 @@ if (q) {
         hasPosts ? (
           posts.map((post, index) => (
             <div 
-              id={post.id} 
+              id={`post-node-${post.id}`} 
               data-post-id={post.id} 
               class="scroll-mt-20 m-0 p-0 block w-full"
             >
@@ -117,24 +117,24 @@ if (q) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlText, "text/html");
 
-            // 🎯 精准锁死卡片节点：只抓取带有 data-post-id 属性的帖子层
-            const newPosts = doc.querySelectorAll("#feed-container [data-post-id]");
+            // 🎯 抓取新卡片节点
+            const newPosts = doc.querySelectorAll("#feed-container > [data-post-id]");
             
             if (newPosts.length > 0) {
-              let lastPostId = null;
+              let nextCursor = null;
 
               newPosts.forEach((node) => {
                 const postId = node.getAttribute("data-post-id");
-                // 过滤防止重复追加已有卡片
-                if (postId && !document.getElementById(postId)) {
+                // 彻底解决 ID 冲突，只比对带 prefix 的节点
+                if (postId && !document.getElementById(`post-node-${postId}`)) {
                   container.appendChild(node.cloneNode(true));
-                  lastPostId = postId;
+                  nextCursor = postId;
                 }
               });
 
-              // 🔑 游标更新策略升级：从新追加的最后一条卡片上直接获取最新的 ID 游标，彻底摆脱 DOMParser 解析漏掉 Trigger 的问题！
-              if (lastPostId) {
-                trigger.setAttribute("data-before-cursor", lastPostId);
+              // 🚀 游标更新：取本次抓到的最后一张帖子的 ID 赋给 trigger
+              if (nextCursor) {
+                trigger.setAttribute("data-before-cursor", nextCursor);
               } else {
                 showEndState(trigger, observer);
               }
@@ -148,7 +148,7 @@ if (q) {
             trigger.classList.add("opacity-0");
             isLoading = false;
 
-            // 重新挂载，防止死锁
+            // 重置观察，防死锁
             observer.unobserve(trigger);
             setTimeout(() => {
               observer.observe(trigger);
@@ -183,6 +183,7 @@ if (q) {
     if (!targetId) return;
 
     const targetElement = 
+      document.getElementById(`post-node-${targetId}`) || 
       document.getElementById(targetId) || 
       document.querySelector(`[data-post-id="${targetId}"]`);
 
