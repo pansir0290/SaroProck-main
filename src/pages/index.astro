@@ -10,14 +10,13 @@ const before = searchParams.get("before");
 const after = searchParams.get("after");
 const q = searchParams.get("q");
 
-// 💡 判断是否为浏览器顶层直接访问（导航模式）
+// 💡 判断是否为浏览器顶层直接导航访问（用户手动敲地址栏/刷新）
 const acceptHeader = Astro.request.headers.get("accept") || "";
 const fetchDest = Astro.request.headers.get("sec-fetch-dest") || "";
 
-// 只有当用户直接在浏览器地址栏打开/刷新（Fetch-Dest 为 document 且 Accept 包含 html）时才重定向
 const isDirectNavigation = fetchDest === "document" || (acceptHeader.includes("text/html") && fetchDest !== "empty");
 
-// 🛡️ 核心防呆：如果是浏览器直接访问带 before/after 的 URL（非后台 fetch，非搜索），重定向回纯净首页
+// 🛡️ 防呆逻辑：如果用户直接在浏览器地址栏访问带 before/after 的 URL，自动重定向回纯净首页
 if ((before || after) && !q && isDirectNavigation) {
   return Astro.redirect("/", 302);
 }
@@ -114,16 +113,19 @@ if (q) {
 
           try {
             const nextUrl = `/?before=${currentBefore}`;
-            // 💡 使用干净标准的原生态 fetch，避免被 CDN/防火墙拦截
+            console.log(`[无限滚动] 正在发起请求抓取 ID < ${currentBefore} 的动态...`);
+
             const response = await fetch(nextUrl);
             const htmlText = await response.text();
 
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlText, "text/html");
 
-            // 提取新帖子节点
-            const newPosts = doc.querySelectorAll("#feed-container > [data-post-id]");
+            // 💡 宽容选择器：直接提取容器下的所有卡片节点
+            const newPosts = doc.querySelectorAll("#feed-container > *");
             const newTrigger = doc.getElementById("infinite-scroll-trigger");
+
+            console.log(`[无限滚动] 抓取成功，解析到 ${newPosts.length} 个新卡片节点。`);
 
             if (newPosts.length > 0) {
               newPosts.forEach((node) => {
@@ -134,21 +136,23 @@ if (q) {
                 const newBefore = newTrigger.getAttribute("data-before-cursor");
                 if (newBefore) {
                   trigger.setAttribute("data-before-cursor", newBefore);
+                  console.log(`[无限滚动] 游标已更新为: ${newBefore}`);
                 }
               } else {
                 showEndState(trigger, observer);
               }
             } else {
+              console.log("[无限滚动] 未解析到更多卡片，触发到底状态。");
               showEndState(trigger, observer);
             }
           } catch (error) {
-            console.error("加载新动态失败:", error);
+            console.error("[无限滚动] 加载失败:", error);
           } finally {
             clearTimeout(loadingTimer);
             trigger.classList.add("opacity-0");
             isLoading = false;
 
-            // 🚀 关键解锁：追加新节点后，重新解除并重新观察，防止 2500px 视界内死锁
+            // 重新挂载监听，防死锁
             observer.unobserve(trigger);
             setTimeout(() => {
               observer.observe(trigger);
@@ -157,7 +161,6 @@ if (q) {
         }
       },
       {
-        // 🚀 保留 2500px 预加载超大缓冲带
         rootMargin: "0px 0px 2500px 0px",
         threshold: 0.01,
       }
@@ -166,7 +169,6 @@ if (q) {
     observer.observe(trigger);
   }
 
-  // 到底部时的优雅提示
   function showEndState(trigger: HTMLElement, observer: IntersectionObserver) {
     trigger.innerHTML = `
       <div class="text-xs text-base-content/40 py-4">
