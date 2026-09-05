@@ -47,7 +47,7 @@ if (q) {
       )
     }
 
-    <!-- 零缝隙包裹层：HTMX 挂载目标容器 -->
+    <!-- 零缝隙包裹层：无限滚动挂载目标容器 -->
     <div id="feed-container" class="flex flex-col m-0 p-0 gap-0 space-y-0">
       {
         hasPosts ? (
@@ -70,17 +70,13 @@ if (q) {
       }
     </div>
 
-    <!-- 💡 HTMX 触底自动加载区域（代替原来的 Pagination 按钮） -->
+    <!-- 💡 提前预加载触发哨兵元素（Sentinel） -->
     {
       enableInfiniteScroll && hasPosts && beforeCursor && (
         <div
-          hx-get={`/?before=${beforeCursor}`}
-          hx-trigger="revealed"
-          hx-target="#feed-container"
-          hx-swap="beforeend"
-          hx-select="#feed-container > *"
-          hx-push-url="true"
-          class="py-10 text-center text-sm text-base-content/60 flex items-center justify-center gap-2 w-full"
+          id="infinite-scroll-trigger"
+          data-before-cursor={beforeCursor}
+          class="py-10 text-center text-sm text-base-content/60 flex items-center justify-center gap-2 w-full transition-opacity duration-300 opacity-0 min-h-[80px]"
         >
           <span class="loading loading-spinner loading-md text-primary"></span>
           <span>正在自动加载更多 Ins 动态...</span>
@@ -91,6 +87,80 @@ if (q) {
 </Layout>
 
 <script>
+  let isLoading = false;
+
+  function initInfiniteScroll() {
+    const trigger = document.getElementById("infinite-scroll-trigger");
+    const container = document.getElementById("feed-container");
+    if (!trigger || !container) return;
+
+    // 创建交叉观察器，设置 rootMargin 提前 1000px 预加载！
+    const observer = new IntersectionObserver(
+      async (entries) => {
+        const entry = entries[0];
+        const currentBefore = trigger.getAttribute("data-before-cursor");
+
+        if (entry.isIntersecting && !isLoading && currentBefore) {
+          isLoading = true;
+          // 只有在加载确实较慢（> 300ms）时才淡出提示组件，平时静默预加载
+          const loadingTimer = setTimeout(() => {
+            trigger.classList.remove("opacity-0");
+          }, 300);
+
+          try {
+            const nextUrl = `/?before=${currentBefore}`;
+            const response = await fetch(nextUrl);
+            const htmlText = await response.text();
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlText, "text/html");
+
+            // 提取新帖子节点
+            const newPosts = doc.querySelectorAll("#feed-container > *");
+            const newTrigger = doc.getElementById("infinite-scroll-trigger");
+
+            if (newPosts.length > 0) {
+              newPosts.forEach((node) => {
+                container.appendChild(node.cloneNode(true));
+              });
+
+              // 更新游标 cursor 与 地址栏 URL
+              if (newTrigger) {
+                const newBefore = newTrigger.getAttribute("data-before-cursor");
+                if (newBefore) {
+                  trigger.setAttribute("data-before-cursor", newBefore);
+                }
+              } else {
+                // 没有更多数据了，销毁 Trigger
+                trigger.remove();
+                observer.disconnect();
+              }
+
+              // 静默更替地址栏游标
+              window.history.replaceState(null, "", nextUrl);
+            } else {
+              trigger.remove();
+              observer.disconnect();
+            }
+          } catch (error) {
+            console.error("加载新动态失败:", error);
+          } finally {
+            clearTimeout(loadingTimer);
+            trigger.classList.add("opacity-0");
+            isLoading = false;
+          }
+        }
+      },
+      {
+        // 🚀 核心黑科技：距离底部还有 1000px（约 1.5 个全屏高度）时就提前在后台偷偷加载！
+        rootMargin: "0px 0px 1000px 0px",
+        threshold: 0.01,
+      }
+    );
+
+    observer.observe(trigger);
+  }
+
   function handleHashHighlight() {
     const hash = window.location.hash;
     if (!hash) return;
@@ -111,10 +181,15 @@ if (q) {
     }
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", handleHashHighlight);
-  } else {
+  function setup() {
+    initInfiniteScroll();
     handleHashHighlight();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setup);
+  } else {
+    setup();
   }
 
   window.addEventListener("hashchange", handleHashHighlight);
