@@ -222,8 +222,21 @@ const socialImageURL = new URL(image, Astro.site);
           wrapper.appendChild(video);
           video.classList.remove("object-cover");
           video.classList.add("object-contain", "w-full", "h-full");
+          
+          // 💡 强力解除静音并触发音频播放
           video.muted = false;
-          video.play().catch(() => {});
+          video.volume = 1.0;
+
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              video.muted = false;
+            }).catch(() => {
+              // 针对策略拦截进行二次强制解禁
+              video.muted = false;
+              video.play().catch(() => {});
+            });
+          }
 
           modal.classList.remove("hidden");
           modal.classList.add("flex");
