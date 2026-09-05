@@ -79,6 +79,9 @@ const socialImageURL = new URL(image, Astro.site);
     <meta name="twitter:title" content={finalTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={socialImageURL} />
+
+    <!-- 💡 引入 HTMX 核心库 -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
   </head>
   <!-- 全局强制消除横向溢出，确保移动端没有任何晃动空间 -->
   <body class="bg-base-100 text-base-content min-h-screen relative selection:bg-primary/20 overflow-x-hidden w-full max-w-full">
