@@ -11,14 +11,11 @@ const after = searchParams.get("after");
 const q = searchParams.get("q");
 const isAjax = searchParams.get("ajax") === "1"; // 🔑 识别后台无限滚动请求
 
-// 🛡️ 终极防呆重定向：
-// 只要 URL 带有 before 或 after 参数，且【不是】后台 AJAX 抓取请求，且【不是】搜索场景
-// 无论什么 ID 参数，全部无条件 302 跳转回干净首页 /
+// 🛡️ 纯净防呆重定向：地址栏直接带 before/after 访问时 302 跳回 /，AJAX 后台抓取时不拦截
 if ((before || after) && !q && !isAjax) {
   return Astro.redirect("/", 302);
 }
 
-// 正常抓取 Telegram 数据
 const { posts } = await getChannelFeed(Astro, {
   before: before || undefined,
   after: after || undefined,
@@ -52,12 +49,13 @@ if (q) {
       )
     }
 
+    <!-- 零缝隙包裹层：无限滚动挂载目标容器 -->
     <div id="feed-container" class="flex flex-col m-0 p-0 gap-0 space-y-0">
       {
         hasPosts ? (
           posts.map((post, index) => (
             <div 
-              id={`post-node-${post.id}`} 
+              id={post.id} 
               data-post-id={post.id} 
               class="scroll-mt-20 m-0 p-0 block w-full"
             >
@@ -74,6 +72,7 @@ if (q) {
       }
     </div>
 
+    <!-- 提前预加载触发哨兵元素 -->
     {
       enableInfiniteScroll && hasPosts && beforeCursor && (
         <div
@@ -89,7 +88,7 @@ if (q) {
   </TelegramLayout>
 </Layout>
 
-<script lang="ts">
+<script>
   let isLoading = false;
 
   function initInfiniteScroll() {
@@ -110,6 +109,7 @@ if (q) {
           }, 300);
 
           try {
+            // 🚀 带上 &ajax=1 通行证，其余保持你原版逻辑
             const nextUrl = `/?before=${currentBefore}&ajax=1`;
             const response = await fetch(nextUrl);
             const htmlText = await response.text();
@@ -117,24 +117,20 @@ if (q) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlText, "text/html");
 
-            // 🎯 抓取新卡片节点
+            // 提取新帖子节点（完全使用你原版的精准选择器）
             const newPosts = doc.querySelectorAll("#feed-container > [data-post-id]");
-            
-            if (newPosts.length > 0) {
-              let nextCursor = null;
+            const newTrigger = doc.getElementById("infinite-scroll-trigger");
 
+            if (newPosts.length > 0) {
               newPosts.forEach((node) => {
-                const postId = node.getAttribute("data-post-id");
-                // 彻底解决 ID 冲突，只比对带 prefix 的节点
-                if (postId && !document.getElementById(`post-node-${postId}`)) {
-                  container.appendChild(node.cloneNode(true));
-                  nextCursor = postId;
-                }
+                container.appendChild(node.cloneNode(true));
               });
 
-              // 🚀 游标更新：取本次抓到的最后一张帖子的 ID 赋给 trigger
-              if (nextCursor) {
-                trigger.setAttribute("data-before-cursor", nextCursor);
+              if (newTrigger) {
+                const newBefore = newTrigger.getAttribute("data-before-cursor");
+                if (newBefore) {
+                  trigger.setAttribute("data-before-cursor", newBefore);
+                }
               } else {
                 showEndState(trigger, observer);
               }
@@ -147,12 +143,7 @@ if (q) {
             clearTimeout(loadingTimer);
             trigger.classList.add("opacity-0");
             isLoading = false;
-
-            // 重置观察，防死锁
-            observer.unobserve(trigger);
-            setTimeout(() => {
-              observer.observe(trigger);
-            }, 100);
+            // 彻底去除多余的 unobserve/observe，恢复原生自然触发！
           }
         }
       },
@@ -165,6 +156,7 @@ if (q) {
     observer.observe(trigger);
   }
 
+  // 到底部时的优雅提示
   function showEndState(trigger: HTMLElement, observer: IntersectionObserver) {
     trigger.innerHTML = `
       <div class="text-xs text-base-content/40 py-4">
@@ -183,7 +175,6 @@ if (q) {
     if (!targetId) return;
 
     const targetElement = 
-      document.getElementById(`post-node-${targetId}`) || 
       document.getElementById(targetId) || 
       document.querySelector(`[data-post-id="${targetId}"]`);
 
