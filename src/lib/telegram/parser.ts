@@ -7,6 +7,7 @@ const STATIC_PROXY =
   (import.meta as any)?.env?.STATIC_PROXY ||
   (typeof process !== "undefined" ? (process as any)?.env?.STATIC_PROXY : undefined) ||
   "https://tgimage.34310889.xyz";
+
 function parseImages(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
   return item.find(".tgme_widget_message_photo_wrap").map((_, photo) => {
     const rawUrl = $(photo).attr("style")?.match(/url\(["'](.*?)["']/)?.[1];
@@ -90,9 +91,13 @@ function parseReply(item: Cheerio<Element>, $: CheerioAPI, channel: string): Rep
 }
 
 /**
- * @returns 返回一个格式化后的 HTML 字符串，如果没有则返回空字符串
+ * @returns 返回一个格式化后的 HTML 字符串，如果没有或已成功解析媒体则返回空字符串
  */
-function parseUnsupportedMedia(item: Cheerio<Element>, $: CheerioAPI, postLink: string): string {
+function parseUnsupportedMedia(item: Cheerio<Element>, $: CheerioAPI, postLink: string, hasMedia: boolean): string {
+  // 💡 如果已经成功解析到了图片或视频，就不再显示该警告
+  if (hasMedia)
+    return "";
+
   const unsupportedWrap = item.find(".message_media_not_supported_wrap");
   if (unsupportedWrap.length === 0)
     return "";
@@ -135,7 +140,9 @@ export function parsePost(element: Element, $: CheerioAPI, channel: string): Tel
 
   textElement.find(".tgme_widget_message_photo_wrap, .tgme_widget_message_video_wrap").remove();
 
-  const unsupportedMediaHtml = parseUnsupportedMedia(item, $, postLink);
+  const media = [...parseImages(item, $), ...parseVideos(item, $)];
+  // 传递 media.length > 0 标记，避免在有视频的情况下误显示警告框
+  const unsupportedMediaHtml = parseUnsupportedMedia(item, $, postLink, media.length > 0);
 
   return {
     id,
@@ -144,7 +151,7 @@ export function parsePost(element: Element, $: CheerioAPI, channel: string): Tel
     text: item.find(".tgme_widget_message_text").text() || "",
     htmlContent: (textElement.html() || "") + unsupportedMediaHtml,
     views: item.find(".tgme_widget_message_views").text() || "0",
-    media: [...parseImages(item, $), ...parseVideos(item, $)],
+    media,
     linkPreview: parseLinkPreview(item, $),
     reply: parseReply(item, $, channel),
   };
