@@ -3,7 +3,6 @@
 import Layout from "@layouts/Layout.astro";
 import TelegramLayout from "@layouts/TelegramLayout.astro";
 import FeedCard from "@components/feed/FeedCard.astro";
-import Pagination from "@components/feed/Pagination.astro";
 import { getChannelFeed } from "@/lib/telegram";
 
 const { searchParams } = Astro.url;
@@ -19,10 +18,9 @@ const { posts } = await getChannelFeed(Astro, {
 
 const hasPosts = posts && posts.length > 0;
 const beforeCursor = hasPosts ? posts[posts.length - 1].id : null;
-const afterCursor = hasPosts ? posts[0].id : null;
 
-const showPagination = !q;
-const showBefore = showPagination;
+// 搜索状态下关闭无限滚动，正常流模式下开启
+const enableInfiniteScroll = !q;
 
 let infoMessage = "";
 if (q) {
@@ -49,8 +47,8 @@ if (q) {
       )
     }
 
-    <!-- 零缝隙包裹层：消除子项一切间距 -->
-    <div class="flex flex-col m-0 p-0 gap-0 space-y-0">
+    <!-- 零缝隙包裹层：HTMX 挂载目标容器 -->
+    <div id="feed-container" class="flex flex-col m-0 p-0 gap-0 space-y-0">
       {
         hasPosts ? (
           posts.map((post, index) => (
@@ -72,13 +70,21 @@ if (q) {
       }
     </div>
 
+    <!-- 💡 HTMX 触底自动加载区域（代替原来的 Pagination 按钮） -->
     {
-      showPagination && hasPosts && (
-        <Pagination
-          beforeCursor={beforeCursor}
-          afterCursor={afterCursor}
-          showBefore={showBefore}
-        />
+      enableInfiniteScroll && hasPosts && beforeCursor && (
+        <div
+          hx-get={`/?before=${beforeCursor}`}
+          hx-trigger="revealed"
+          hx-target="#feed-container"
+          hx-swap="beforeend"
+          hx-select="#feed-container > *"
+          hx-push-url="true"
+          class="py-10 text-center text-sm text-base-content/60 flex items-center justify-center gap-2 w-full"
+        >
+          <span class="loading loading-spinner loading-md text-primary"></span>
+          <span>正在自动加载更多 Ins 动态...</span>
+        </div>
       )
     }
   </TelegramLayout>
