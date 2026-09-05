@@ -13,7 +13,7 @@ if (!media || media.length === 0) return null;
 const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)}`;
 ---
 
-<div class="relative group w-full overflow-hidden block m-0 p-0 leading-none">
+<div class="relative group w-full overflow-hidden block m-0 p-0 leading-none media-gallery-root">
   <!-- 滚动轨道 -->
   <div
     id={uniqueId}
@@ -82,7 +82,7 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
 <!-- 3. Ins 风格：底部动态圆点指示器（Dots Indicator） -->
 {
   media.length > 1 && (
-    <div class="w-full flex items-center justify-center space-x-1.5 py-2 bg-base-100 border-none select-none">
+    <div class="w-full flex items-center justify-center space-x-1.5 py-2 bg-base-100 border-none select-none gallery-dots-wrapper">
       {media.map((_, idx) => (
         <span
           class={`gallery-dot dot-${uniqueId} inline-block rounded-full transition-all duration-300 ${
@@ -129,8 +129,10 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
       container.setAttribute("data-inited", "true");
 
       const targetId = container.id;
-      const counter = container.parentElement?.querySelector(".current-counter");
-      const dots = document.querySelectorAll(`.dot-${targetId}`);
+      // 从包裹层或者祖先 article 节点寻找配套的数字与圆点，防止跨节点寻找失效
+      const article = container.closest("article") || container.parentElement?.parentElement;
+      const counter = article ? article.querySelector(".current-counter") : null;
+      const dots = article ? article.querySelectorAll(`.dot-${targetId}`) : document.querySelectorAll(`.dot-${targetId}`);
 
       container.addEventListener("scroll", () => {
         const width = container.clientWidth;
@@ -154,6 +156,9 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
       });
     });
   }
+
+  // 挂载至全局，方便 DOM 追加后手动调用
+  (window as any).initBleedGallery = initBleedGallery;
 
   document.addEventListener("DOMContentLoaded", initBleedGallery);
   document.addEventListener("astro:page-load", initBleedGallery);
