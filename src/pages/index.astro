@@ -1,25 +1,101 @@
-<script lang="ts">
-  // 📱 手机端移动控制台调试器（加载完问题解决后删掉即可）
-  (function () {
-    var script = document.createElement('script');
-    script.src = "//cdn.jsdelivr.net/npm/eruda";
-    document.body.appendChild(script);
-    script.onload = function () {
-      // @ts-ignore
-      eruda.init();
-      console.log("[调试器] 手机控制台已就绪");
-    };
-  })();
+---
+// src/pages/index.astro
+import Layout from "@layouts/Layout.astro";
+import TelegramLayout from "@layouts/TelegramLayout.astro";
+import FeedCard from "@components/feed/FeedCard.astro";
+import { getChannelFeed } from "@/lib/telegram";
 
+const { searchParams } = Astro.url;
+const before = searchParams.get("before");
+const after = searchParams.get("after");
+const q = searchParams.get("q");
+const isAjax = searchParams.get("ajax") === "1"; // 🔑 识别后台无限滚动请求
+
+// 🛡️ 终极防呆重定向：
+// 只要 URL 带有 before 或 after 参数，且【不是】后台 AJAX 抓取请求，且【不是】搜索场景
+// 无论是 ID 48、ID 1 还是任何参数，全部无条件 302 跳转回干净首页 /
+if ((before || after) && !q && !isAjax) {
+  return Astro.redirect("/", 302);
+}
+
+// 正常抓取 Telegram 数据
+const { posts } = await getChannelFeed(Astro, {
+  before: before || undefined,
+  after: after || undefined,
+  q: q || undefined,
+});
+
+const hasPosts = posts && posts.length > 0;
+const beforeCursor = hasPosts ? posts[posts.length - 1].id : null;
+
+// 搜索状态下关闭无限滚动，正常流模式下开启
+const enableInfiniteScroll = !q;
+
+let infoMessage = "";
+if (q) {
+  infoMessage = `正在查看关于 <strong class="text-primary">“${q}”</strong> 的搜索结果。`;
+}
+---
+
+<Layout title="首页">
+  <TelegramLayout>
+    {
+      infoMessage && (
+        <div role="alert" class="alert rounded-xl text-sm mb-4">
+          <i class="ri-information-line" />
+          <span set:html={infoMessage} />
+          <a href="/" class="btn btn-ghost btn-sm ml-auto">
+            <i class="ri-arrow-go-back-line mr-1" />
+            返回最新
+          </a>
+        </div>
+      )
+    }
+
+    <div id="feed-container" class="flex flex-col m-0 p-0 gap-0 space-y-0">
+      {
+        hasPosts ? (
+          posts.map((post, index) => (
+            <div 
+              id={post.id} 
+              data-post-id={post.id} 
+              class="scroll-mt-20 m-0 p-0 block w-full"
+            >
+              <FeedCard post={post} isLastItem={index === posts.length - 1} />
+            </div>
+          ))
+        ) : (
+          <div class="text-center text-base-content/60 py-12">
+            <i class="ri-compass-3-line text-4xl" />
+            <p class="mt-4">没有找到任何动态。</p>
+            {q && <p class="text-xs mt-1">请尝试更换搜索关键词。</p>}
+          </div>
+        )
+      }
+    </div>
+
+    {
+      enableInfiniteScroll && hasPosts && beforeCursor && (
+        <div
+          id="infinite-scroll-trigger"
+          data-before-cursor={beforeCursor}
+          class="py-10 text-center text-sm text-base-content/60 flex items-center justify-center gap-2 w-full transition-opacity duration-300 opacity-0 min-h-[80px]"
+        >
+          <span class="loading loading-spinner loading-md text-primary"></span>
+          <span>正在自动加载更多 Ins 动态...</span>
+        </div>
+      )
+    }
+  </TelegramLayout>
+</Layout>
+
+<script lang="ts">
   let isLoading = false;
 
   function initInfiniteScroll() {
     const trigger = document.getElementById("infinite-scroll-trigger");
     const container = document.getElementById("feed-container");
-    if (!trigger || !container) {
-      console.error("[无限滚动] 找不到 trigger 或 container 容器！");
-      return;
-    }
+    if (!trigger || !container) return;
 
     const observer = new IntersectionObserver(
       async (entries) => {
@@ -34,21 +110,17 @@
           }, 300);
 
           try {
-            const nextUrl = `/?before=${currentBefore}`;
-            console.log(`[无限滚动] 正在发起请求: ${nextUrl}`);
-
+            // 🚀 带上 &ajax=1 通行证，通知 SSR 这是后台数据抓取，不要拦截重定向
+            const nextUrl = `/?before=${currentBefore}&ajax=1`;
             const response = await fetch(nextUrl);
-            console.log(`[无限滚动] 响应状态码: ${response.status}`);
-
             const htmlText = await response.text();
 
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlText, "text/html");
 
+            // 提取新卡片节点
             const newPosts = doc.querySelectorAll("#feed-container > *");
             const newTrigger = doc.getElementById("infinite-scroll-trigger");
-
-            console.log(`[无限滚动] 抓取成功，解析到 ${newPosts.length} 个卡片`);
 
             if (newPosts.length > 0) {
               newPosts.forEach((node) => {
@@ -59,23 +131,21 @@
                 const newBefore = newTrigger.getAttribute("data-before-cursor");
                 if (newBefore) {
                   trigger.setAttribute("data-before-cursor", newBefore);
-                  console.log(`[无限滚动] 游标更新为: ${newBefore}`);
                 }
               } else {
-                console.log("[无限滚动] 响应中没有 newTrigger，触发到底");
                 showEndState(trigger, observer);
               }
             } else {
-              console.log("[无限滚动] 没有解析到新卡片，触发到底");
               showEndState(trigger, observer);
             }
           } catch (error) {
-            console.error("[无限滚动] 请求异常错误:", error);
+            console.error("加载新动态失败:", error);
           } finally {
             clearTimeout(loadingTimer);
             trigger.classList.add("opacity-0");
             isLoading = false;
 
+            // 重新观察，防止死锁
             observer.unobserve(trigger);
             setTimeout(() => {
               observer.observe(trigger);
