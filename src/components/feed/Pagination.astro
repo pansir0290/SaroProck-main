@@ -1,0 +1,47 @@
+---
+// src/components/feed/Pagination.astro
+interface Props {
+  beforeCursor?: string | null; // “更早”的光标 (最后一个帖子的 ID)
+  afterCursor?: string | null;  // “更新”的光标 (第一个帖子的 ID)
+  showBefore?: boolean;         // 是否显示“更早”按钮
+  showAfter?: boolean;          // 可选参数
+}
+
+const { beforeCursor, afterCursor, showBefore = true, showAfter } = Astro.props;
+
+// 获取当前 URL 参数
+const { searchParams } = Astro.url;
+const hasPageParam = searchParams.has("before") || searchParams.has("after");
+
+// 💡 核心修复：只有当 URL 中已经带有 before 或 after 参数（说明不在第一页），且有 afterCursor 时，才允许往回翻
+const isNewerDisabled = showAfter !== undefined ? !showAfter : (!hasPageParam || !afterCursor);
+const isOlderDisabled = !beforeCursor || !showBefore;
+---
+
+<nav class="flex justify-between items-center gap-4 my-6">
+  <!-- 往回翻（更新的动态） -->
+  <a
+    href={isNewerDisabled ? "#" : `/?after=${afterCursor}`}
+    class:list={[
+      "btn btn-primary btn-sm rounded-xl sm:btn-md min-h-[44px] flex-1 sm:flex-initial",
+      { "btn-disabled opacity-40 pointer-events-none": isNewerDisabled },
+    ]}
+    aria-disabled={isNewerDisabled}
+  >
+    <i class="ri-arrow-left-line text-lg"></i>
+    <span>更新的动态</span>
+  </a>
+
+  <!-- 往前翻（更早的动态） -->
+  <a
+    href={isOlderDisabled ? "#" : `/?before=${beforeCursor}`}
+    class:list={[
+      "btn btn-primary btn-sm rounded-xl sm:btn-md min-h-[44px] flex-1 sm:flex-initial",
+      { "btn-disabled opacity-40 pointer-events-none": isOlderDisabled },
+    ]}
+    aria-disabled={isOlderDisabled}
+  >
+    <span>更早的动态</span>
+    <i class="ri-arrow-right-line text-lg"></i>
+  </a>
+</nav>
