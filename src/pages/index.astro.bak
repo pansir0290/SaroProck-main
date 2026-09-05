@@ -3,13 +3,18 @@
 import Layout from "@layouts/Layout.astro";
 import TelegramLayout from "@layouts/TelegramLayout.astro";
 import FeedCard from "@components/feed/FeedCard.astro";
-import Pagination from "@components/feed/Pagination.astro";
 import { getChannelFeed } from "@/lib/telegram";
 
 const { searchParams } = Astro.url;
 const before = searchParams.get("before");
 const after = searchParams.get("after");
-const q = searchParams.get("q"); // 搜索参数
+const q = searchParams.get("q");
+const isAjax = searchParams.get("ajax") === "1"; // 🔑 识别后台无限滚动请求
+
+// 🛡️ 纯净防呆重定向：地址栏直接带 before/after 访问时 302 跳回 /，AJAX 后台抓取时不拦截
+if ((before || after) && !q && !isAjax) {
+  return Astro.redirect("/", 302);
+}
 
 const { posts } = await getChannelFeed(Astro, {
   before: before || undefined,
@@ -17,26 +22,15 @@ const { posts } = await getChannelFeed(Astro, {
   q: q || undefined,
 });
 
-const hasPosts = posts.length > 0;
-// "更早" 的光标是当前页面最后一条消息的 ID
+const hasPosts = posts && posts.length > 0;
 const beforeCursor = hasPosts ? posts[posts.length - 1].id : null;
-// "更新" 的光标是当前页面第一条消息的 ID
-const afterCursor = hasPosts ? posts[0].id : null;
 
-// 是否显示分页？(搜索时不显示)
-const showPagination = !q;
-// 是否显示 "更新" 按钮？(只有在非首页时才显示)
-const showAfter = showPagination && (!!before || !!after);
-// 是否显示 "更早" 按钮？
-const showBefore = showPagination;
+// 搜索状态下关闭无限滚动，正常流模式下开启
+const enableInfiniteScroll = !q;
 
 let infoMessage = "";
 if (q) {
   infoMessage = `正在查看关于 <strong class="text-primary">“${q}”</strong> 的搜索结果。`;
-} else if (before) {
-  infoMessage = `正在查看 ID <strong class="text-primary">${before}</strong> 之前的动态。`;
-} else if (after) {
-  infoMessage = `正在查看 ID <strong class="text-primary">${after}</strong> 之后的动态。`;
 }
 ---
 
@@ -55,36 +49,124 @@ if (q) {
       )
     }
 
-    {
-      posts.length > 0 ? (
-        posts.map((post, index) => (
-          <div id={post.id} data-post-id={post.id} class="scroll-mt-20">
-            <FeedCard post={post} isLastItem={index === posts.length - 1} />
+    <!-- 零缝隙包裹层：无限滚动挂载目标容器 -->
+    <div id="feed-container" class="flex flex-col m-0 p-0 gap-0 space-y-0">
+      {
+        hasPosts ? (
+          posts.map((post, index) => (
+            <div 
+              id={post.id} 
+              data-post-id={post.id} 
+              class="scroll-mt-20 m-0 p-0 block w-full"
+            >
+              <FeedCard post={post} isLastItem={index === posts.length - 1} />
+            </div>
+          ))
+        ) : (
+          <div class="text-center text-base-content/60 py-12">
+            <i class="ri-compass-3-line text-4xl" />
+            <p class="mt-4">没有找到任何动态。</p>
+            {q && <p class="text-xs mt-1">请尝试更换搜索关键词。</p>}
           </div>
-        ))
-      ) : (
-        <div class="text-center text-base-content/60 py-12">
-          <i class="ri-compass-3-line text-4xl" />
-          <p class="mt-4">没有找到任何动态。</p>
-          {q && <p class="text-xs mt-1">请尝试更换搜索关键词。</p>}
-        </div>
-      )
-    }
+        )
+      }
+    </div>
 
+    <!-- 提前预加载触发哨兵元素 -->
     {
-      showPagination && posts.length > 0 && (
-        <Pagination
-          beforeCursor={beforeCursor}
-          afterCursor={afterCursor}
-          showBefore={showBefore}
-        />
+      enableInfiniteScroll && hasPosts && beforeCursor && (
+        <div
+          id="infinite-scroll-trigger"
+          data-before-cursor={beforeCursor}
+          class="py-10 text-center text-sm text-base-content/60 flex items-center justify-center gap-2 w-full transition-opacity duration-300 opacity-0 min-h-[80px]"
+        >
+          <span class="loading loading-spinner loading-md text-primary"></span>
+          <span>正在自动加载更多 Ins 动态...</span>
+        </div>
       )
     }
   </TelegramLayout>
 </Layout>
 
 <script>
-  // 处理锚点 (#贴号) 的自动平滑滚动与高亮
+  let isLoading = false;
+
+  function initInfiniteScroll() {
+    const trigger = document.getElementById("infinite-scroll-trigger");
+    const container = document.getElementById("feed-container");
+    if (!trigger || !container) return;
+
+    const observer = new IntersectionObserver(
+      async (entries) => {
+        const entry = entries[0];
+        const currentBefore = trigger.getAttribute("data-before-cursor");
+
+        if (entry.isIntersecting && !isLoading && currentBefore) {
+          isLoading = true;
+          
+          const loadingTimer = setTimeout(() => {
+            trigger.classList.remove("opacity-0");
+          }, 300);
+
+          try {
+            // 🚀 带上 &ajax=1 通行证，其余保持你原版逻辑
+            const nextUrl = `/?before=${currentBefore}&ajax=1`;
+            const response = await fetch(nextUrl);
+            const htmlText = await response.text();
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlText, "text/html");
+
+            // 提取新帖子节点（完全使用你原版的精准选择器）
+            const newPosts = doc.querySelectorAll("#feed-container > [data-post-id]");
+            const newTrigger = doc.getElementById("infinite-scroll-trigger");
+
+            if (newPosts.length > 0) {
+              newPosts.forEach((node) => {
+                container.appendChild(node.cloneNode(true));
+              });
+
+              if (newTrigger) {
+                const newBefore = newTrigger.getAttribute("data-before-cursor");
+                if (newBefore) {
+                  trigger.setAttribute("data-before-cursor", newBefore);
+                }
+              } else {
+                showEndState(trigger, observer);
+              }
+            } else {
+              showEndState(trigger, observer);
+            }
+          } catch (error) {
+            console.error("加载新动态失败:", error);
+          } finally {
+            clearTimeout(loadingTimer);
+            trigger.classList.add("opacity-0");
+            isLoading = false;
+            // 彻底去除多余的 unobserve/observe，恢复原生自然触发！
+          }
+        }
+      },
+      {
+        rootMargin: "0px 0px 2500px 0px",
+        threshold: 0.01,
+      }
+    );
+
+    observer.observe(trigger);
+  }
+
+  // 到底部时的优雅提示
+  function showEndState(trigger: HTMLElement, observer: IntersectionObserver) {
+    trigger.innerHTML = `
+      <div class="text-xs text-base-content/40 py-4">
+        <span>🎉 已经到底啦，共展现了所有 Ins 动态</span>
+      </div>
+    `;
+    trigger.classList.remove("opacity-0");
+    observer.disconnect();
+  }
+
   function handleHashHighlight() {
     const hash = window.location.hash;
     if (!hash) return;
@@ -92,30 +174,29 @@ if (q) {
     const targetId = hash.replace("#", "");
     if (!targetId) return;
 
-    // 寻找带有对应 ID 的贴号 DOM 节点
     const targetElement = 
       document.getElementById(targetId) || 
       document.querySelector(`[data-post-id="${targetId}"]`);
 
     if (targetElement) {
-      // 1. 平滑滚动到屏幕中央
       targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
-
-      // 2. 增加视觉高亮引导圈
-      targetElement.classList.add("ring-2", "ring-primary", "rounded-2xl", "transition-all", "duration-300");
+      targetElement.classList.add("ring-2", "ring-primary", "transition-all", "duration-300");
       setTimeout(() => {
         targetElement.classList.remove("ring-2", "ring-primary");
       }, 2500);
     }
   }
 
-  // 1. 页面加载完成时立刻触发一次检查
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", handleHashHighlight);
-  } else {
+  function setup() {
+    initInfiniteScroll();
     handleHashHighlight();
   }
 
-  // 2. 监听 URL 哈希变动（如在同一页连续点击搜索结果）
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setup);
+  } else {
+    setup();
+  }
+
   window.addEventListener("hashchange", handleHashHighlight);
 </script>
