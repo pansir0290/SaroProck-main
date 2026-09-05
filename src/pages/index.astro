@@ -110,7 +110,6 @@ if (q) {
           }, 300);
 
           try {
-            // 🚀 带上 &ajax=1 通行证，通知 SSR 这是后台数据抓取，不要拦截重定向
             const nextUrl = `/?before=${currentBefore}&ajax=1`;
             const response = await fetch(nextUrl);
             const htmlText = await response.text();
@@ -118,20 +117,24 @@ if (q) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlText, "text/html");
 
-            // 提取新卡片节点
-            const newPosts = doc.querySelectorAll("#feed-container > *");
-            const newTrigger = doc.getElementById("infinite-scroll-trigger");
-
+            // 🎯 精准锁死卡片节点：只抓取带有 data-post-id 属性的帖子层
+            const newPosts = doc.querySelectorAll("#feed-container [data-post-id]");
+            
             if (newPosts.length > 0) {
+              let lastPostId = null;
+
               newPosts.forEach((node) => {
-                container.appendChild(node.cloneNode(true));
+                const postId = node.getAttribute("data-post-id");
+                // 过滤防止重复追加已有卡片
+                if (postId && !document.getElementById(postId)) {
+                  container.appendChild(node.cloneNode(true));
+                  lastPostId = postId;
+                }
               });
 
-              if (newTrigger) {
-                const newBefore = newTrigger.getAttribute("data-before-cursor");
-                if (newBefore) {
-                  trigger.setAttribute("data-before-cursor", newBefore);
-                }
+              // 🔑 游标更新策略升级：从新追加的最后一条卡片上直接获取最新的 ID 游标，彻底摆脱 DOMParser 解析漏掉 Trigger 的问题！
+              if (lastPostId) {
+                trigger.setAttribute("data-before-cursor", lastPostId);
               } else {
                 showEndState(trigger, observer);
               }
@@ -145,7 +148,7 @@ if (q) {
             trigger.classList.add("opacity-0");
             isLoading = false;
 
-            // 重新观察，防止死锁
+            // 重新挂载，防止死锁
             observer.unobserve(trigger);
             setTimeout(() => {
               observer.observe(trigger);
