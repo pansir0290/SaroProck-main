@@ -1,103 +1,25 @@
----
-// src/pages/index.astro
-import Layout from "@layouts/Layout.astro";
-import TelegramLayout from "@layouts/TelegramLayout.astro";
-import FeedCard from "@components/feed/FeedCard.astro";
-import { getChannelFeed } from "@/lib/telegram";
-
-const { searchParams } = Astro.url;
-const before = searchParams.get("before");
-const after = searchParams.get("after");
-const q = searchParams.get("q");
-
-// 💡 判断是否为浏览器顶层直接导航访问（用户手动敲地址栏/刷新）
-const acceptHeader = Astro.request.headers.get("accept") || "";
-const fetchDest = Astro.request.headers.get("sec-fetch-dest") || "";
-
-const isDirectNavigation = fetchDest === "document" || (acceptHeader.includes("text/html") && fetchDest !== "empty");
-
-// 🛡️ 防呆逻辑：如果用户直接在浏览器地址栏访问带 before/after 的 URL，自动重定向回纯净首页
-if ((before || after) && !q && isDirectNavigation) {
-  return Astro.redirect("/", 302);
-}
-
-const { posts } = await getChannelFeed(Astro, {
-  before: before || undefined,
-  after: after || undefined,
-  q: q || undefined,
-});
-
-const hasPosts = posts && posts.length > 0;
-const beforeCursor = hasPosts ? posts[posts.length - 1].id : null;
-
-// 搜索状态下关闭无限滚动，正常流模式下开启
-const enableInfiniteScroll = !q;
-
-let infoMessage = "";
-if (q) {
-  infoMessage = `正在查看关于 <strong class="text-primary">“${q}”</strong> 的搜索结果。`;
-}
----
-
-<Layout title="首页">
-  <TelegramLayout>
-    {
-      infoMessage && (
-        <div role="alert" class="alert rounded-xl text-sm mb-4">
-          <i class="ri-information-line" />
-          <span set:html={infoMessage} />
-          <a href="/" class="btn btn-ghost btn-sm ml-auto">
-            <i class="ri-arrow-go-back-line mr-1" />
-            返回最新
-          </a>
-        </div>
-      )
-    }
-
-    <div id="feed-container" class="flex flex-col m-0 p-0 gap-0 space-y-0">
-      {
-        hasPosts ? (
-          posts.map((post, index) => (
-            <div 
-              id={post.id} 
-              data-post-id={post.id} 
-              class="scroll-mt-20 m-0 p-0 block w-full"
-            >
-              <FeedCard post={post} isLastItem={index === posts.length - 1} />
-            </div>
-          ))
-        ) : (
-          <div class="text-center text-base-content/60 py-12">
-            <i class="ri-compass-3-line text-4xl" />
-            <p class="mt-4">没有找到任何动态。</p>
-            {q && <p class="text-xs mt-1">请尝试更换搜索关键词。</p>}
-          </div>
-        )
-      }
-    </div>
-
-    {
-      enableInfiniteScroll && hasPosts && beforeCursor && (
-        <div
-          id="infinite-scroll-trigger"
-          data-before-cursor={beforeCursor}
-          class="py-10 text-center text-sm text-base-content/60 flex items-center justify-center gap-2 w-full transition-opacity duration-300 opacity-0 min-h-[80px]"
-        >
-          <span class="loading loading-spinner loading-md text-primary"></span>
-          <span>正在自动加载更多 Ins 动态...</span>
-        </div>
-      )
-    }
-  </TelegramLayout>
-</Layout>
-
 <script lang="ts">
+  // 📱 手机端移动控制台调试器（加载完问题解决后删掉即可）
+  (function () {
+    var script = document.createElement('script');
+    script.src = "//cdn.jsdelivr.net/npm/eruda";
+    document.body.appendChild(script);
+    script.onload = function () {
+      // @ts-ignore
+      eruda.init();
+      console.log("[调试器] 手机控制台已就绪");
+    };
+  })();
+
   let isLoading = false;
 
   function initInfiniteScroll() {
     const trigger = document.getElementById("infinite-scroll-trigger");
     const container = document.getElementById("feed-container");
-    if (!trigger || !container) return;
+    if (!trigger || !container) {
+      console.error("[无限滚动] 找不到 trigger 或 container 容器！");
+      return;
+    }
 
     const observer = new IntersectionObserver(
       async (entries) => {
@@ -113,19 +35,20 @@ if (q) {
 
           try {
             const nextUrl = `/?before=${currentBefore}`;
-            console.log(`[无限滚动] 正在发起请求抓取 ID < ${currentBefore} 的动态...`);
+            console.log(`[无限滚动] 正在发起请求: ${nextUrl}`);
 
             const response = await fetch(nextUrl);
+            console.log(`[无限滚动] 响应状态码: ${response.status}`);
+
             const htmlText = await response.text();
 
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlText, "text/html");
 
-            // 💡 宽容选择器：直接提取容器下的所有卡片节点
             const newPosts = doc.querySelectorAll("#feed-container > *");
             const newTrigger = doc.getElementById("infinite-scroll-trigger");
 
-            console.log(`[无限滚动] 抓取成功，解析到 ${newPosts.length} 个新卡片节点。`);
+            console.log(`[无限滚动] 抓取成功，解析到 ${newPosts.length} 个卡片`);
 
             if (newPosts.length > 0) {
               newPosts.forEach((node) => {
@@ -136,23 +59,23 @@ if (q) {
                 const newBefore = newTrigger.getAttribute("data-before-cursor");
                 if (newBefore) {
                   trigger.setAttribute("data-before-cursor", newBefore);
-                  console.log(`[无限滚动] 游标已更新为: ${newBefore}`);
+                  console.log(`[无限滚动] 游标更新为: ${newBefore}`);
                 }
               } else {
+                console.log("[无限滚动] 响应中没有 newTrigger，触发到底");
                 showEndState(trigger, observer);
               }
             } else {
-              console.log("[无限滚动] 未解析到更多卡片，触发到底状态。");
+              console.log("[无限滚动] 没有解析到新卡片，触发到底");
               showEndState(trigger, observer);
             }
           } catch (error) {
-            console.error("[无限滚动] 加载失败:", error);
+            console.error("[无限滚动] 请求异常错误:", error);
           } finally {
             clearTimeout(loadingTimer);
             trigger.classList.add("opacity-0");
             isLoading = false;
 
-            // 重新挂载监听，防死锁
             observer.unobserve(trigger);
             setTimeout(() => {
               observer.observe(trigger);
