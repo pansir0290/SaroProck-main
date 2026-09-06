@@ -12,7 +12,7 @@ import remarkMath from "remark-math";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://saro-prock-main-git-main-pansirs-projects.vercel.app/",
+  site: "https://saroprock-main.pages.dev",
   output: "server",
   adapter: cloudflare(),
   vite: {
