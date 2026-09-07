@@ -32,15 +32,14 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
               loading="lazy"
             />
           ) : (
-            <!-- Ins 风格视频：去掉 controls，开启静音循环自动播放，绑定点击事件 -->
-            <div class="relative w-full h-full group/video overflow-hidden cursor-pointer flex items-center justify-center">
+            <!-- 懒加载视频容器：通过 data-src 暂存真实地址，避免初次加载并发抢占 -->
+            <div class="relative w-full h-full group/video overflow-hidden cursor-pointer flex items-center justify-center lazy-video-container">
               <video
-                src={item.url}
-                autoplay
+                data-src={item.url}
                 muted
                 loop
                 playsinline
-                preload="metadata"
+                preload="none"
                 class="reel-video w-full h-full object-cover block m-0 p-0 border-0 outline-none scale-[1.015] transform-gpu"
               />
               <!-- 视频悬浮微弱播放图标指示器 -->
@@ -108,7 +107,7 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
 
 <script>
   function initBleedGallery() {
-    // 左右按钮点击切换
+    // 1. 左右按钮点击切换
     document.querySelectorAll(".prev-btn, .next-btn").forEach((btn) => {
       if (btn.hasAttribute("data-inited")) return;
       btn.setAttribute("data-inited", "true");
@@ -132,7 +131,7 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
       });
     });
 
-    // 监听滑动：同时更新胶囊数字 和 底部小圆点高亮状态
+    // 2. 监听滑动：同时更新胶囊数字 和 底部小圆点高亮状态
     document.querySelectorAll('[id^="gallery-"]').forEach((container) => {
       if (container.hasAttribute("data-inited")) return;
       container.setAttribute("data-inited", "true");
@@ -161,6 +160,40 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
         });
       });
     });
+
+    // 3. 视口懒加载视频（IntersectionObserver 错峰加载，解决并发连接瓶颈）
+    const videoContainers = document.querySelectorAll(".lazy-video-container");
+    if (videoContainers.length > 0 && "IntersectionObserver" in window) {
+      const videoObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const container = entry.target;
+            const video = container.querySelector("video");
+            if (video && !video.getAttribute("src")) {
+              const realSrc = video.getAttribute("data-src");
+              if (realSrc) {
+                video.setAttribute("src", realSrc);
+                video.load();
+                video.play().catch(() => {
+                  // 浏览器自动播放策略兜底
+                });
+              }
+            }
+            observer.unobserve(container);
+          }
+        });
+      }, {
+        rootMargin: "600px 0px", // 提前 200px 开始加载，保证用户滚到时已经就绪
+        threshold: 0.01
+      });
+
+      videoContainers.forEach((container) => {
+        if (!container.hasAttribute("data-obs-inited")) {
+          container.setAttribute("data-obs-inited", "true");
+          videoObserver.observe(container);
+        }
+      });
+    }
   }
 
   (window as any).initBleedGallery = initBleedGallery;
