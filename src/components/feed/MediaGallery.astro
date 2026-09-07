@@ -32,7 +32,7 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
               loading="lazy"
             />
           ) : (
-            <!-- 懒加载视频容器 -->
+            <!-- 懒加载与内存回收视频容器 -->
             <div class="relative w-full h-full group/video overflow-hidden cursor-pointer flex items-center justify-center lazy-video-container">
               <video
                 data-src={item.url}
@@ -161,20 +161,19 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
       });
     });
 
-    // 3. 核心混动策略：前置直出 + 后续懒加载
+    // 3. 核心双向策略：前置硬直出 + 视口懒加载 + 滚出视口内存回收（GC）
     const videoContainers = Array.from(document.querySelectorAll(".lazy-video-container"));
     if (videoContainers.length > 0) {
-      // 定义页面最顶部的几组视频直接“硬直出”不等待懒加载（例如前 2 个视频容器）
+      // 保持你认可的 5 个首屏硬直出配额
       const INSTANT_LOAD_COUNT = 5; 
 
       videoContainers.forEach((container, idx) => {
-        if (idx < INSTANT_LOAD_COUNT && !container.hasAttribute("data-obs-inited")) {
-          container.setAttribute("data-obs-inited", "true");
+        if (idx < INSTANT_LOAD_COUNT && !container.hasAttribute("data-loaded")) {
+          container.setAttribute("data-loaded", "true");
           const video = container.querySelector("video");
           if (video && !video.getAttribute("src")) {
             const realSrc = video.getAttribute("data-src");
             if (realSrc) {
-              // 稍微错开一点点微小毫秒（比如 idx * 50ms），防止双视频同时并发把连接打满
               setTimeout(() => {
                 video.setAttribute("src", realSrc);
                 video.load();
@@ -185,40 +184,57 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
         }
       });
 
-      // 剩下的视频继续走 IntersectionObserver 视口懒加载
+      // 使用双向 IntersectionObserver：既负责进视口加载，又负责出视口释放内存
       if ("IntersectionObserver" in window) {
-        const videoObserver = new IntersectionObserver((entries, observer) => {
+        const videoObserver = new IntersectionObserver((entries) => {
+          // 自上而下排序队列
           entries.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
 
           entries.forEach((entry, index) => {
-            if (entry.isIntersecting) {
-              const container = entry.target;
-              if (container.hasAttribute("data-obs-inited")) return;
-              container.setAttribute("data-obs-inited", "true");
+            const container = entry.target as HTMLElement;
+            const video = container.querySelector("video");
+            if (!video) return;
 
-              const video = container.querySelector("video");
-              if (video && !video.getAttribute("src")) {
+            if (entry.isIntersecting) {
+              // 【进入视口】：加载并播放
+              if (!container.hasAttribute("data-loaded")) {
+                container.setAttribute("data-loaded", "true");
                 const realSrc = video.getAttribute("data-src");
-                if (realSrc) {
+                if (realSrc && !video.getAttribute("src")) {
                   setTimeout(() => {
                     video.setAttribute("src", realSrc);
                     video.load();
                     video.play().catch(() => {});
                   }, index * 80);
                 }
+              } else {
+                // 如果之前加载过但被回收了，再次进入时恢复播放
+                if (video.paused && video.getAttribute("src")) {
+                  video.play().catch(() => {});
+                }
               }
-              observer.unobserve(container);
+            } else {
+              // 【滚出视口（上下离开 800px 缓冲区）】：主动释放内存与解码槽位
+              // 防止往下刷几页后手机内存爆炸、解码器卡死
+              const rect = container.getBoundingClientRect();
+              // 只有当元素彻底离开视口上下方较远距离时才回收
+              if (rect.top > window.innerHeight + 800 || rect.bottom < -800) {
+                if (container.hasAttribute("data-loaded") && video.getAttribute("src")) {
+                  video.pause();
+                  video.removeAttribute("src"); // 彻底清空 src，释放网络和内存缓存
+                  video.load(); // 重置视频解码器状态
+                  container.removeAttribute("data-loaded"); // 允许下次滚动回来时重新加载
+                }
+              }
             }
           });
         }, {
           rootMargin: "600px 0px",
-          threshold: 0.01
+          threshold: 0
         });
 
         videoContainers.forEach((container) => {
-          if (!container.hasAttribute("data-obs-inited")) {
-            videoObserver.observe(container);
-          }
+          videoObserver.observe(container);
         });
       }
     }
