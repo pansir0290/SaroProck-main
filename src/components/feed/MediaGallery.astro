@@ -32,7 +32,7 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
               loading="lazy"
             />
           ) : (
-            <!-- 懒加载视频容器：通过 data-src 暂存真实地址，避免初次加载并发抢占 -->
+            <!-- 懒加载视频容器 -->
             <div class="relative w-full h-full group/video overflow-hidden cursor-pointer flex items-center justify-center lazy-video-container">
               <video
                 data-src={item.url}
@@ -161,44 +161,66 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
       });
     });
 
-    // 3. 视口懒加载视频（自上而下排序 + 错峰队列）
-    const videoContainers = document.querySelectorAll(".lazy-video-container");
-    if (videoContainers.length > 0 && "IntersectionObserver" in window) {
-      const videoObserver = new IntersectionObserver((entries, observer) => {
-        // 按元素距离视口顶部的距离升序排序，确保屏幕最上方的视频绝对优先加载
-        entries.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+    // 3. 核心混动策略：前置直出 + 后续懒加载
+    const videoContainers = Array.from(document.querySelectorAll(".lazy-video-container"));
+    if (videoContainers.length > 0) {
+      // 定义页面最顶部的几组视频直接“硬直出”不等待懒加载（例如前 2 个视频容器）
+      const INSTANT_LOAD_COUNT = 5; 
 
-        entries.forEach((entry, index) => {
-          if (entry.isIntersecting) {
-            const container = entry.target;
-            const video = container.querySelector("video");
-            if (video && !video.getAttribute("src")) {
-              const realSrc = video.getAttribute("data-src");
-              if (realSrc) {
-                // 阶梯式错峰延迟：每个视频依次错开 80ms，强制实现自上而下依次点亮
-                setTimeout(() => {
-                  video.setAttribute("src", realSrc);
-                  video.load();
-                  video.play().catch(() => {
-                    // 自动播放策略兜底
-                  });
-                }, index * 80);
-              }
-            }
-            observer.unobserve(container);
-          }
-        });
-      }, {
-        rootMargin: "600px 0px", // 600px 提前量
-        threshold: 0.01
-      });
-
-      videoContainers.forEach((container) => {
-        if (!container.hasAttribute("data-obs-inited")) {
+      videoContainers.forEach((container, idx) => {
+        if (idx < INSTANT_LOAD_COUNT && !container.hasAttribute("data-obs-inited")) {
           container.setAttribute("data-obs-inited", "true");
-          videoObserver.observe(container);
+          const video = container.querySelector("video");
+          if (video && !video.getAttribute("src")) {
+            const realSrc = video.getAttribute("data-src");
+            if (realSrc) {
+              // 稍微错开一点点微小毫秒（比如 idx * 50ms），防止双视频同时并发把连接打满
+              setTimeout(() => {
+                video.setAttribute("src", realSrc);
+                video.load();
+                video.play().catch(() => {});
+              }, idx * 50);
+            }
+          }
         }
       });
+
+      // 剩下的视频继续走 IntersectionObserver 视口懒加载
+      if ("IntersectionObserver" in window) {
+        const videoObserver = new IntersectionObserver((entries, observer) => {
+          entries.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+
+          entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+              const container = entry.target;
+              if (container.hasAttribute("data-obs-inited")) return;
+              container.setAttribute("data-obs-inited", "true");
+
+              const video = container.querySelector("video");
+              if (video && !video.getAttribute("src")) {
+                const realSrc = video.getAttribute("data-src");
+                if (realSrc) {
+                  setTimeout(() => {
+                    video.setAttribute("src", realSrc);
+                    video.load();
+                    video.play().catch(() => {});
+                  }, index * 80);
+                }
+              }
+              observer.unobserve(container);
+            }
+          });
+        }, {
+          rootMargin: "600px 0px",
+          threshold: 0.01
+        });
+
+        videoContainers.forEach((container) => {
+          if (!container.hasAttribute("data-obs-inited")) {
+            videoObserver.observe(container);
+          }
+        });
+      }
     }
   }
 
