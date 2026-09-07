@@ -161,7 +161,7 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
       });
     });
 
-    // 3. 视口懒加载视频（加入自上而下排序与错峰队列，杜绝倒序加载）
+    // 3. 视口懒加载视频（自上而下排序 + 错峰队列）
     const videoContainers = document.querySelectorAll(".lazy-video-container");
     if (videoContainers.length > 0 && "IntersectionObserver" in window) {
       const videoObserver = new IntersectionObserver((entries, observer) => {
@@ -189,7 +189,7 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
           }
         });
       }, {
-        rootMargin: "600px 0px", // 维持 600px 提前量，适应高速滚动
+        rootMargin: "600px 0px", // 600px 提前量
         threshold: 0.01
       });
 
