@@ -106,6 +106,39 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
 }
 
 <script>
+  // 全局视频加载限流队列：串行单通道，每个视频加载间隔放大到 2.5 秒（2500ms），彻底让出带宽
+  class VideoLoadQueue {
+    private queue: Array<() => void> = [];
+    private activeCount = 0;
+    private maxConcurrent = 1; // 严守单通道，绝对不并发
+
+    public add(task: () => void) {
+      this.queue.push(task);
+      this.next();
+    }
+
+    private next() {
+      if (this.activeCount >= this.maxConcurrent || this.queue.length === 0) {
+        return;
+      }
+      this.activeCount++;
+      const task = this.queue.shift();
+      if (task) {
+        try {
+          task();
+        } finally {
+          // 核心调整：前一个视频发起后，足足等待 2500ms（2.5秒）再放行下一个视频
+          setTimeout(() => {
+            this.activeCount--;
+            this.next();
+          }, 2500);
+        }
+      }
+    }
+  }
+
+  const globalVideoQueue = new VideoLoadQueue();
+
   function initBleedGallery() {
     // 1. 左右按钮点击切换
     document.querySelectorAll(".prev-btn, .next-btn").forEach((btn) => {
@@ -161,11 +194,11 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
       });
     });
 
-    // 3. 核心双向策略：前置硬直出 + 视口懒加载 + 滚出视口内存回收（GC）
+    // 3. 核心：通过 2.5 秒大间隔队列错峰加载视频
     const videoContainers = Array.from(document.querySelectorAll(".lazy-video-container"));
     if (videoContainers.length > 0) {
-      // 保持你认可的 5 个首屏硬直出配额
-      const INSTANT_LOAD_COUNT = 5; 
+      // 页面最顶部的首屏直接进入加载队列（例如前 3 个）
+      const INSTANT_LOAD_COUNT = 3; 
 
       videoContainers.forEach((container, idx) => {
         if (idx < INSTANT_LOAD_COUNT && !container.hasAttribute("data-loaded")) {
@@ -174,56 +207,52 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
           if (video && !video.getAttribute("src")) {
             const realSrc = video.getAttribute("data-src");
             if (realSrc) {
-              setTimeout(() => {
+              // 丢入 2.5 秒大间隔限流队列
+              globalVideoQueue.add(() => {
                 video.setAttribute("src", realSrc);
                 video.load();
                 video.play().catch(() => {});
-              }, idx * 50);
+              });
             }
           }
         }
       });
 
-      // 使用双向 IntersectionObserver：既负责进视口加载，又负责出视口释放内存
+      // 之后的视频通过视口观察器进入队列
       if ("IntersectionObserver" in window) {
         const videoObserver = new IntersectionObserver((entries) => {
-          // 自上而下排序队列
           entries.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
 
-          entries.forEach((entry, index) => {
+          entries.forEach((entry) => {
             const container = entry.target as HTMLElement;
             const video = container.querySelector("video");
             if (!video) return;
 
             if (entry.isIntersecting) {
-              // 【进入视口】：加载并播放
               if (!container.hasAttribute("data-loaded")) {
                 container.setAttribute("data-loaded", "true");
                 const realSrc = video.getAttribute("data-src");
                 if (realSrc && !video.getAttribute("src")) {
-                  setTimeout(() => {
+                  globalVideoQueue.add(() => {
                     video.setAttribute("src", realSrc);
                     video.load();
                     video.play().catch(() => {});
-                  }, index * 80);
+                  });
                 }
               } else {
-                // 如果之前加载过但被回收了，再次进入时恢复播放
                 if (video.paused && video.getAttribute("src")) {
                   video.play().catch(() => {});
                 }
               }
             } else {
-              // 【滚出视口（上下离开 800px 缓冲区）】：主动释放内存与解码槽位
-              // 防止往下刷几页后手机内存爆炸、解码器卡死
+              // 滚出视口超过 800px 自动释放内存（GC）
               const rect = container.getBoundingClientRect();
-              // 只有当元素彻底离开视口上下方较远距离时才回收
               if (rect.top > window.innerHeight + 800 || rect.bottom < -800) {
                 if (container.hasAttribute("data-loaded") && video.getAttribute("src")) {
                   video.pause();
-                  video.removeAttribute("src"); // 彻底清空 src，释放网络和内存缓存
-                  video.load(); // 重置视频解码器状态
-                  container.removeAttribute("data-loaded"); // 允许下次滚动回来时重新加载
+                  video.removeAttribute("src");
+                  video.load();
+                  container.removeAttribute("data-loaded");
                 }
               }
             }
