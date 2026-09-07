@@ -14,7 +14,6 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
 ---
 
 <div class="relative group w-full overflow-hidden block m-0 p-0 leading-none media-gallery-root">
-  <!-- 滚动轨道 -->
   <div
     id={uniqueId}
     class="flex overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth w-full m-0 p-0 leading-none border-none transform-gpu"
@@ -32,7 +31,6 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
               loading="lazy"
             />
           ) : (
-            <!-- 严格受控的视频容器 -->
             <div class="relative w-full h-full group/video overflow-hidden cursor-pointer flex items-center justify-center lazy-video-container">
               <video
                 data-src={item.url}
@@ -42,7 +40,6 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
                 preload="none"
                 class="reel-video w-full h-full object-cover block m-0 p-0 border-0 outline-none scale-[1.015] transform-gpu"
               />
-              <!-- 视频悬浮微弱播放图标指示器 -->
               <div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 group-hover/video:opacity-100 transition-opacity duration-200">
                 <i class="ri-play-circle-line text-white/80 text-4xl shadow-lg"></i>
               </div>
@@ -53,7 +50,6 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
     }
   </div>
 
-  <!-- 1. 右上角悬浮胶囊页码（如 1/5） -->
   {
     media.length > 1 && (
       <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white text-[11px] font-mono px-2.5 py-1 rounded-full z-10 pointer-events-none border border-white/10 shadow-md">
@@ -62,7 +58,6 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
     )
   }
 
-  <!-- 2. PC 端左右悬浮箭头 -->
   {
     media.length > 1 && (
       <>
@@ -87,7 +82,6 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
   }
 </div>
 
-<!-- 3. Ins 风格：底部动态圆点指示器（Dots Indicator） -->
 {
   media.length > 1 && (
     <div class="w-full flex items-center justify-center space-x-1.5 py-2 bg-base-100 border-none select-none gallery-dots-wrapper">
@@ -106,60 +100,63 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
 }
 
 <script>
-  // 严格按垂直坐标排序的全局串行加载管理器
-  class StrictOrderedVideoQueue {
-    private queue: Array<{ element: HTMLElement; task: () => void }> = [];
-    private isProcessing = false;
+  // 全局绝对单行道加载器：强制严格串行，绝无并发
+  class AbsoluteSequentialQueue {
+    private queue: Array<{ element: HTMLElement; video: HTMLVideoElement; src: string }> = [];
+    private isRunning = false;
 
-    // 注册任务并按页面纵坐标（Top）从小到大排序
-    public add(element: HTMLElement, task: () => void) {
-      // 避免重复入队
-      if (element.hasAttribute("data-queued")) return;
-      element.setAttribute("data-queued", "true");
+    public enqueue(element: HTMLElement, video: HTMLVideoElement, src: string) {
+      // 去重
+      if (element.hasAttribute("data-in-queue")) return;
+      element.setAttribute("data-in-queue", "true");
 
-      this.queue.push({ element, task });
-      this.sortQueue();
-      this.processNext();
+      this.queue.push({ element, video, src });
+      this.sortAndRun();
     }
 
-    // 核心：实时比对 DOM 在屏幕上的垂直绝对位置，确保永远是“从上到下”绝对依次加载
-    private sortQueue() {
+    private sortAndRun() {
+      // 每次有新任务，强制按当前页面绝对纵坐标（Top）从小到大严格排序！
+      // 保证页面最顶部的永远排在数组第 0 位
       this.queue.sort((a, b) => {
-        const rectA = a.element.getBoundingClientRect();
-        const rectB = b.element.getBoundingClientRect();
-        return rectA.top - rectB.top;
+        return a.element.getBoundingClientRect().top - b.element.getBoundingClientRect().top;
       });
+
+      this.step();
     }
 
-    private processNext() {
-      if (this.isProcessing || this.queue.length === 0) return;
+    private step() {
+      if (this.isRunning || this.queue.length === 0) return;
 
-      this.isProcessing = true;
-      this.sortQueue(); // 每次执行前重新校准排序
+      this.isRunning = true;
+      // 再次校准排序
+      this.sortAndRun();
 
       const item = this.queue.shift();
       if (!item) {
-        this.isProcessing = false;
+        this.isRunning = false;
         return;
       }
 
-      try {
-        item.task();
-      } catch (e) {
-        console.error("Video load error:", e);
+      // 执行加载当前最顶部的视频
+      const { element, video, src } = item;
+      if (!element.hasAttribute("data-loaded")) {
+        element.setAttribute("data-loaded", "true");
+        video.setAttribute("src", src);
+        video.load();
+        video.play().catch(() => {});
       }
 
-      // 保持 2 秒的安全错峰间隔，再处理下一个排队的视频
+      // 严格等待 2 秒钟，让当前视频独占带宽下完首帧，再放行下一个
       setTimeout(() => {
-        this.isProcessing = false;
-        this.processNext();
+        this.isRunning = false;
+        this.step();
       }, 2000);
     }
   }
 
-  // 全局唯一单例
-  if (!(window as any).__strictVideoQueue) {
-    (window as any).__strictVideoQueue = new StrictOrderedVideoQueue();
+  // 挂载全局唯一单例
+  if (!(window as any).__absoluteQueue) {
+    (window as any).__absoluteQueue = new AbsoluteSequentialQueue();
   }
 
   function initBleedGallery() {
@@ -217,55 +214,21 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
       });
     });
 
-    // 3. 核心：通过严格坐标排序的全局队列接管所有视频
+    // 3. 核心：页面一加载，把全网所有的视频全部丢进全局绝对序列
     const videoContainers = Array.from(document.querySelectorAll(".lazy-video-container"));
-    const strictQueue = (window as any).__strictVideoQueue;
+    const absoluteQueue = (window as any).__absoluteQueue;
 
     if (videoContainers.length > 0) {
-      // 绝对保证：只把当前屏幕最顶部的那个视频作为绝对优先级第 1 个推入队列！
       videoContainers.forEach((container) => {
         const htmlContainer = container as HTMLElement;
         const video = htmlContainer.querySelector("video");
         if (!video) return;
 
         const realSrc = video.getAttribute("data-src");
-        if (!realSrc || htmlContainer.hasAttribute("data-loaded")) return;
+        if (!realSrc) return;
 
-        // 利用 IntersectionObserver 配合严格坐标队列
-        if ("IntersectionObserver" in window) {
-          const observer = new IntersectionObserver((entries, obs) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                obs.unobserve(entry.target);
-                
-                // 核心：丢入严格按 Top 排序的全局队列
-                strictQueue.add(htmlContainer, () => {
-                  if (!htmlContainer.hasAttribute("data-loaded")) {
-                    htmlContainer.setAttribute("data-loaded", "true");
-                    video.setAttribute("src", realSrc);
-                    video.load();
-                    video.play().catch(() => {});
-                  }
-                });
-              }
-            });
-          }, {
-            rootMargin: "300px 0px", // 提前 300px 预加载视口内的
-            threshold: 0
-          });
-
-          observer.observe(htmlContainer);
-        } else {
-          // 降级兜底方案
-          strictQueue.add(htmlContainer, () => {
-            if (!htmlContainer.hasAttribute("data-loaded")) {
-              htmlContainer.setAttribute("data-loaded", "true");
-              video.setAttribute("src", realSrc);
-              video.load();
-              video.play().catch(() => {});
-            }
-          });
-        }
+        // 直接丢进绝对队列，由队列统一按页面 Top 纵坐标从上到下排队
+        absoluteQueue.enqueue(htmlContainer, video, realSrc);
       });
     }
   }
