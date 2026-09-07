@@ -161,29 +161,35 @@ const uniqueId = `gallery-${postId || Math.random().toString(36).substring(2, 9)
       });
     });
 
-    // 3. 视口懒加载视频（IntersectionObserver 错峰加载，解决并发连接瓶颈）
+    // 3. 视口懒加载视频（加入自上而下排序与错峰队列，杜绝倒序加载）
     const videoContainers = document.querySelectorAll(".lazy-video-container");
     if (videoContainers.length > 0 && "IntersectionObserver" in window) {
       const videoObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach((entry) => {
+        // 按元素距离视口顶部的距离升序排序，确保屏幕最上方的视频绝对优先加载
+        entries.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+
+        entries.forEach((entry, index) => {
           if (entry.isIntersecting) {
             const container = entry.target;
             const video = container.querySelector("video");
             if (video && !video.getAttribute("src")) {
               const realSrc = video.getAttribute("data-src");
               if (realSrc) {
-                video.setAttribute("src", realSrc);
-                video.load();
-                video.play().catch(() => {
-                  // 浏览器自动播放策略兜底
-                });
+                // 阶梯式错峰延迟：每个视频依次错开 80ms，强制实现自上而下依次点亮
+                setTimeout(() => {
+                  video.setAttribute("src", realSrc);
+                  video.load();
+                  video.play().catch(() => {
+                    // 自动播放策略兜底
+                  });
+                }, index * 80);
               }
             }
             observer.unobserve(container);
           }
         });
       }, {
-        rootMargin: "600px 0px", // 提前 200px 开始加载，保证用户滚到时已经就绪
+        rootMargin: "600px 0px", // 维持 600px 提前量，适应高速滚动
         threshold: 0.01
       });
 
